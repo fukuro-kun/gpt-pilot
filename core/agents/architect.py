@@ -17,6 +17,7 @@ from core.templates.registry import (
     ProjectTemplateEnum,
 )
 from core.ui.base import ProjectStage
+from core.ui.translations import translate
 
 ARCHITECTURE_STEP_NAME = "Project architecture"
 WARN_SYSTEM_DEPS = ["docker", "kubernetes", "microservices"]
@@ -94,7 +95,7 @@ class TemplateSelection(BaseModel):
 
 class Architect(BaseAgent):
     agent_type = "architect"
-    display_name = "Architect"
+    display_name = translate("architect_display_name")
 
     async def run(self) -> AgentResponse:
         await self.ui.send_project_stage(ProjectStage.ARCHITECTURE)
@@ -114,17 +115,7 @@ class Architect(BaseAgent):
         return AgentResponse.done(self)
 
     async def select_templates(self, spec: Specification) -> tuple[str, dict[ProjectTemplateEnum, Any]]:
-        """
-        Select project template(s) to use based on the project description.
-
-        Although the Pythagora database models support multiple projects, this
-        function will choose at most one project template, as we currently don't
-        have templates that could be used together in a single project.
-
-        :param spec: Project specification.
-        :return: Dictionary of selected project templates.
-        """
-        await self.send_message("Selecting starter templates ...")
+        await self.send_message(translate("selecting_starter_templates"))
 
         llm = self.get_llm()
         convo = (
@@ -139,13 +130,11 @@ class Architect(BaseAgent):
         templates = {}
         if tpl.template:
             answer = await self.ask_question(
-                f"Do you want to use the '{tpl.template.name}' template?",
-                buttons={"yes": "Yes", "no": "No"},
+                translate("use_template_question", template_name=tpl.template.name),
+                buttons={"yes": translate("yes"), "no": translate("no")},
                 default="yes",
                 buttons_only=True,
-                hint="Project templates are here to speed up start of your app development and save tokens and time.\n"
-                "Choose 'Yes' to use suggested template for your app.\n"
-                "If you choose 'No', project will be created from scratch.",
+                hint=translate("template_usage_hint"),
             )
 
             if answer.button == "no":
@@ -163,10 +152,10 @@ class Architect(BaseAgent):
         return tpl.architecture, templates
 
     async def plan_architecture(self, spec: Specification):
-        await self.send_message("Planning project architecture ...")
+        await self.send_message(translate("planning_project_architecture"))
         architecture_description, templates = await self.select_templates(spec)
 
-        await self.send_message("Picking technologies to use ...")
+        await self.send_message(translate("picking_technologies"))
 
         llm = self.get_llm(stream_output=True)
         convo = (
@@ -193,19 +182,16 @@ class Architect(BaseAgent):
 
         if warn_system_deps:
             await self.ask_question(
-                f"Warning: Pythagora doesn't officially support {', '.join(warn_system_deps)}. "
-                f"You can try to use {'it' if len(warn_system_deps) == 1 else 'them'}, but you may run into problems.",
-                buttons={"continue": "Continue"},
+                translate("warning_unsupported_dependencies", dependencies=', '.join(warn_system_deps)),
+                buttons={"continue": translate("continue_button")},
                 buttons_only=True,
                 default="continue",
             )
 
         if warn_package_deps:
             await self.ask_question(
-                f"Warning: Pythagora works best with vanilla JavaScript. "
-                f"You can try try to use {', '.join(warn_package_deps)}, but you may run into problems. "
-                f"Visit {WARN_FRAMEWORKS_URL} for more information.",
-                buttons={"continue": "Continue"},
+                translate("warning_frontend_frameworks", frameworks=', '.join(warn_package_deps), url=WARN_FRAMEWORKS_URL),
+                buttons={"continue": translate("continue_button")},
                 buttons_only=True,
                 default="continue",
             )
@@ -237,24 +223,24 @@ class Architect(BaseAgent):
         deps = spec.system_dependencies
 
         for dep in deps:
-            await self.send_message(f"Checking if {dep['name']} is available ...")
+            await self.send_message(translate("checking_dependency_availability", dependency=dep['name']))
             status_code, _, _ = await self.process_manager.run_command(dep["test"])
             dep["installed"] = bool(status_code == 0)
             if status_code != 0:
                 if dep["required_locally"]:
-                    remedy = "Please install it before proceeding with your app."
+                    remedy = translate("install_dependency_locally")
                 else:
-                    remedy = "If you would like to use it locally, please install it before proceeding."
-                await self.send_message(f"❌ {dep['name']} is not available. {remedy}")
+                    remedy = translate("install_dependency_optional")
+                await self.send_message(translate("dependency_not_available", dependency=dep['name'], remedy=remedy))
                 await self.ask_question(
                     "",
-                    buttons={"continue": f"I've installed {dep['name']}"},
+                    buttons={"continue": translate("dependency_installed", dependency=dep['name'])},
                     buttons_only=True,
                     default="continue",
                 )
 
             else:
-                await self.send_message(f"✅ {dep['name']} is available.")
+                await self.send_message(translate("dependency_available", dependency=dep['name']))
 
     async def configure_template(self, spec: Specification, template_class: BaseProjectTemplate) -> BaseModel:
         """

@@ -32,14 +32,14 @@ class Importer(BaseAgent):
         project_root = self.state_manager.get_full_project_root()
         await self.ui.import_project(project_root)
         await self.send_message(
-            f"This is experimental feature and is currently limited to projects with size up to {MAX_PROJECT_LINES} lines of code."
+            translate("experimental_feature_warning", max_lines=MAX_PROJECT_LINES)
         )
 
         await self.ask_question(
-            f"Please copy your project files to {project_root} and press Continue",
+            translate("copy_files_instruction", project_root=project_root),
             allow_empty=False,
             buttons={
-                "continue": "Continue",
+                "continue": "Fortfahren",
             },
             buttons_only=True,
             default="continue",
@@ -49,20 +49,20 @@ class Importer(BaseAgent):
         imported_lines = sum(len(f.content.content.splitlines()) for f in imported_files)
         if imported_lines > MAX_PROJECT_LINES:
             await self.send_message(
-                "WARNING: Your project ({imported_lines} LOC) is larger than supported and may cause issues in Pythagora."
+                translate("project_size_warning", loc=imported_lines)
             )
         await self.state_manager.commit()
 
     async def analyze_project(self):
         llm = self.get_llm(stream_output=True)
 
-        self.send_message("Inspecting most important project files ...")
+        self.send_message(translate("inspecting_files"))
 
         convo = AgentConvo(self).template("get_entrypoints")
         llm_response = await llm(convo, parser=JSONParser())
         relevant_files = [f for f in self.current_state.files if f.path in llm_response]
 
-        self.send_message("Analyzing project ...")
+        self.send_message(translate("analyzing_project"))
 
         convo = AgentConvo(self).template(
             "analyze_project", relevant_files=relevant_files, example_spec=EXAMPLE_PROJECT_DESCRIPTION

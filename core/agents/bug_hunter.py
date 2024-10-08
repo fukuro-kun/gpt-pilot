@@ -1,3 +1,5 @@
+from core.ui.translations import translate
+
 from enum import Enum
 
 from pydantic import BaseModel, Field
@@ -42,7 +44,7 @@ class ImportantLogsForDebugging(BaseModel):
 
 class BugHunter(BaseAgent):
     agent_type = "bug-hunter"
-    display_name = "Bug Hunter"
+    display_name = translate("bug_hunter_display_name")
 
     async def run(self) -> AgentResponse:
         current_iteration = self.current_state.current_iteration
@@ -96,12 +98,12 @@ class BugHunter(BaseAgent):
         if hunt_conclusion.conclusion == magic_words.PROBLEM_IDENTIFIED:
             # if no need for logs, implement iteration same as before
             self.set_data_for_next_hunting_cycle(human_readable_instructions, IterationStatus.AWAITING_BUG_FIX)
-            await self.send_message("Found the bug. I'm attempting to fix it ...")
+            await self.send_message(translate("found_bug_attempting_fix"))
             await self.ui.send_bug_hunter_status("fixing_bug", num_bug_hunting_cycles)
         else:
             # if logs are needed, add logging steps
             self.set_data_for_next_hunting_cycle(human_readable_instructions, IterationStatus.AWAITING_LOGGING)
-            await self.send_message("Adding more logs to identify the bug ...")
+            await self.send_message(translate("adding_more_logs"))
             await self.ui.send_bug_hunter_status("adding_logs", num_bug_hunting_cycles)
 
         self.next_state.flag_iterations_as_modified()
@@ -110,20 +112,20 @@ class BugHunter(BaseAgent):
     async def ask_user_to_test(self, awaiting_bug_reproduction: bool = False, awaiting_user_test: bool = False):
         await self.ui.stop_app()
         test_instructions = self.current_state.current_iteration["bug_reproduction_description"]
-        await self.send_message("You can reproduce the bug like this:\n\n" + test_instructions)
+        await self.send_message(translate("reproduce_bug_instructions") + "\n\n" + test_instructions)
         await self.ui.send_test_instructions(test_instructions)
 
         if self.current_state.run_command:
             await self.ui.send_run_command(self.current_state.run_command)
 
         if awaiting_user_test:
-            buttons = {"yes": "Yes, the issue is fixed", "no": "No", "start_pair_programming": "Start Pair Programming"}
+            buttons = {"yes": translate("yes_issue_fixed"), "no": translate("no"), "start_pair_programming": translate("start_pair_programming")}
             user_feedback = await self.ask_question(
-                "Is the bug you reported fixed now?",
+                translate("is_reported_bug_fixed"),
                 buttons=buttons,
                 default="yes",
                 buttons_only=True,
-                hint="Instructions for testing:\n\n"
+                hint=translate("testing_instructions") + "\n\n"
                 + self.current_state.current_iteration["bug_reproduction_description"],
             )
             self.next_state.current_iteration["bug_hunting_cycles"][-1]["fix_attempted"] = True
@@ -139,16 +141,16 @@ class BugHunter(BaseAgent):
         if awaiting_bug_reproduction:
             # TODO how can we get FE and BE logs automatically?
             buttons = {
-                "copy_backend_logs": "Copy Backend Logs",
-                "continue": "Continue without logs",
-                "done": "Bug is fixed",
-                "start_pair_programming": "Start Pair Programming",
+                "copy_backend_logs": translate("copy_backend_logs"),
+                "continue": translate("continue_without_logs"),
+                "done": translate("bug_is_fixed"),
+                "start_pair_programming": translate("start_pair_programming"),
             }
             backend_logs = await self.ask_question(
-                "Please share the relevant Backend logs",
+                translate("share_relevant_backend_logs"),
                 buttons=buttons,
                 default="continue",
-                hint="Instructions for testing:\n\n"
+                hint=translate("testing_instructions") + "\n\n"
                 + self.current_state.current_iteration["bug_reproduction_description"],
             )
 
@@ -159,23 +161,23 @@ class BugHunter(BaseAgent):
                 self.next_state.flag_iterations_as_modified()
             else:
                 buttons = {
-                    "copy_frontend_logs": "Copy Frontend Logs",
-                    "continue": "Continue without logs",
+                    "copy_frontend_logs": translate("copy_frontend_logs"),
+                    "continue": translate("continue_without_logs"),
                 }
                 frontend_logs = await self.ask_question(
-                    "Please share the relevant Frontend logs",
+                    translate("share_relevant_frontend_logs"),
                     buttons=buttons,
                     default="continue",
-                    hint="Instructions for testing:\n\n"
+                    hint=translate("testing_instructions") + "\n\n"
                     + self.current_state.current_iteration["bug_reproduction_description"],
                 )
 
-                buttons = {"continue": "Continue without feedback"}
+                buttons = {"continue": translate("continue_without_feedback")}
                 user_feedback = await self.ask_question(
-                    "Please add any additional feedback that could help Pythagora solve this bug",
+                    translate("add_additional_feedback"),
                     buttons=buttons,
                     default="continue",
-                    hint="Instructions for testing:\n\n"
+                    hint=translate("testing_instructions") + "\n\n"
                     + self.current_state.current_iteration["bug_reproduction_description"],
                 )
 
@@ -219,17 +221,17 @@ class BugHunter(BaseAgent):
         while True:
             self.next_state.current_iteration["initial_explanation"] = initial_explanation
             next_step = await self.ask_question(
-                "What do you want to do?",
+                translate("what_do_you_want_to_do"),
                 buttons={
-                    "question": "I have a question",
-                    "done": "I fixed the bug myself",
-                    "tell_me_more": "Tell me more about the bug",
-                    "solution_hint": "I think I know where the problem is",
-                    "other": "Other",
+                    "question": translate("i_have_a_question"),
+                    "done": translate("i_fixed_the_bug_myself"),
+                    "tell_me_more": translate("tell_me_more_about_the_bug"),
+                    "solution_hint": translate("i_think_i_know_where_the_problem_is"),
+                    "other": translate("other"),
                 },
                 buttons_only=True,
                 default="continue",
-                hint="Instructions for testing:\n\n"
+                hint=translate("testing_instructions") + "\n\n"
                 + self.current_state.current_iteration["bug_reproduction_description"],
             )
 
@@ -257,7 +259,7 @@ class BugHunter(BaseAgent):
                 self.next_state.complete_iteration()
                 break
             elif next_step.button == "question":
-                user_response = await self.ask_question("Oh, cool, what would you like to know?")
+                user_response = await self.ask_question(translate("what_would_you_like_to_know"))
                 convo = convo.template("ask_a_question", question=user_response.text)
                 await self.ui.start_important_stream()
                 llm_answer = await llm(convo, temperature=0.5)
@@ -269,13 +271,13 @@ class BugHunter(BaseAgent):
                 await self.send_message(response)
             elif next_step.button == "other":
                 # this is the same as "question" - we want to keep an option for users to click to understand if we're missing something with other options
-                user_response = await self.ask_question("Let me know what you think ...")
+                user_response = await self.ask_question(translate("let_me_know_what_you_think"))
                 convo = convo.template("ask_a_question", question=user_response.text)
                 await self.ui.start_important_stream()
                 llm_answer = await llm(convo, temperature=0.5)
                 await self.send_message(llm_answer)
             elif next_step.button == "solution_hint":
-                human_hint_label = "Amazing! How do you think we can solve this bug?"
+                human_hint_label = translate("how_to_solve_bug")
                 while True:
                     human_hint = await self.ask_question(human_hint_label)
                     convo = convo.template("instructions_from_human_hint", human_hint=human_hint.text)
@@ -283,7 +285,7 @@ class BugHunter(BaseAgent):
                     llm = self.get_llm(CHECK_LOGS_AGENT_NAME, stream_output=True)
                     human_readable_instructions = await llm(convo, temperature=0.5)
                     human_approval = await self.ask_question(
-                        "Can I implement this solution?", buttons={"yes": "Yes", "no": "No"}, buttons_only=True
+                        translate("can_i_implement_solution"), buttons={"yes": translate("yes"), "no": translate("no")}, buttons_only=True
                     )
                     llm = self.get_llm(stream_output=True)
                     if human_approval.button == "yes":
@@ -293,7 +295,7 @@ class BugHunter(BaseAgent):
                         self.next_state.flag_iterations_as_modified()
                         break
                     else:
-                        human_hint_label = "Oh, my bad, what did I misunderstand?"
+                        human_hint_label = translate("what_did_i_misunderstand")
                 break
             elif next_step.button == "tell_me_more":
                 convo.template("tell_me_more")

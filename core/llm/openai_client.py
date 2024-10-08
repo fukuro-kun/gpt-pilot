@@ -21,8 +21,8 @@ class OpenAIClient(BaseLLMClient):
 
     def _init_client(self):
         self.client = AsyncOpenAI(
-            api_key=self.config.api_key,
-            base_url=self.config.base_url,
+            api_key=self.config.api_key or "ollama",  # Verwende "ollama" als Standard-API-Key
+            base_url=self.config.base_url or "https://api.openai.com/v1",
             timeout=Timeout(
                 max(self.config.connect_timeout, self.config.read_timeout),
                 connect=self.config.connect_timeout,

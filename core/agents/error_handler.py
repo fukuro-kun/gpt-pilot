@@ -5,6 +5,7 @@ from core.agents.convo import AgentConvo
 from core.agents.response import AgentResponse
 from core.db.models.project_state import IterationStatus
 from core.log import get_logger
+from core.ui.translations import translate
 
 log = get_logger(__name__)
 
@@ -19,7 +20,7 @@ class ErrorHandler(BaseAgent):
     """
 
     agent_type = "error-handler"
-    display_name = "Error Handler"
+    display_name = translate("error_handler_display_name")
 
     async def run(self) -> AgentResponse:
         from core.agents.executor import Executor

@@ -1,3 +1,5 @@
+from core.ui.translations import translate
+
 from typing import Optional
 from uuid import uuid4
 
@@ -31,7 +33,7 @@ class RouteFilePaths(BaseModel):
 
 class Troubleshooter(IterationPromptMixin, RelevantFilesMixin, BaseAgent):
     agent_type = "troubleshooter"
-    display_name = "Troubleshooter"
+    display_name = translate("troubleshooter_display_name")
 
     async def run(self) -> AgentResponse:
         if self.current_state.unfinished_iterations:
@@ -72,7 +74,7 @@ class Troubleshooter(IterationPromptMixin, RelevantFilesMixin, BaseAgent):
             self.next_state.flag_tasks_as_modified()
             return AgentResponse.done(self)
         else:
-            await self.send_message("Here are instructions on how to test the app:\n\n" + user_instructions)
+            await self.send_message(translate("test_instructions_message") + "\n\n" + user_instructions)
 
         await self.ui.stop_app()
         await self.ui.send_test_instructions(user_instructions)
@@ -163,7 +165,7 @@ class Troubleshooter(IterationPromptMixin, RelevantFilesMixin, BaseAgent):
         if self.current_state.run_command:
             return self.current_state.run_command
 
-        await self.send_message("Figuring out how to run the app ...")
+        await self.send_message(translate("figuring_out_run_command"))
 
         llm = self.get_llm(TROUBLESHOOTER_GET_RUN_COMMAND)
         convo = self._get_task_convo().template("get_run_command")
@@ -176,7 +178,7 @@ class Troubleshooter(IterationPromptMixin, RelevantFilesMixin, BaseAgent):
         return llm_response
 
     async def get_user_instructions(self) -> Optional[str]:
-        await self.send_message("Determining how to test the app ...")
+        await self.send_message(translate("determining_test_instructions"))
 
         route_files = await self._get_route_files()
 
@@ -232,17 +234,17 @@ class Troubleshooter(IterationPromptMixin, RelevantFilesMixin, BaseAgent):
         is_loop = False
         should_iterate = True
 
-        test_message = "Please check if the app is working"
+        test_message = translate("check_app_working")
         if user_instructions:
-            hint = " Here is a description of what should be working:\n\n" + user_instructions
+            hint = translate("working_description_hint") + "\n\n" + user_instructions
 
         if run_command:
             await self.ui.send_run_command(run_command)
 
         buttons = {
-            "continue": "Everything works",
-            "change": "I want to make a change",
-            "bug": "There is an issue",
+            "continue": translate("everything_works"),
+            "change": translate("want_to_make_change"),
+            "bug": translate("there_is_issue"),
         }
 
         user_response = await self.ask_question(
@@ -253,14 +255,14 @@ class Troubleshooter(IterationPromptMixin, RelevantFilesMixin, BaseAgent):
 
         elif user_response.button == "change":
             user_description = await self.ask_question(
-                "Please describe the change you want to make to the project specification (one at a time)"
+                translate("describe_change_request")
             )
             change_description = user_description.text
 
         elif user_response.button == "bug":
             user_description = await self.ask_question(
-                "Please describe the issue you found (one at a time) and share any relevant server logs",
-                buttons={"copy_server_logs": "Copy Server Logs"},
+                translate("describe_issue_and_logs"),
+                buttons={"copy_server_logs": translate("copy_server_logs_button")},
             )
             bug_report = user_description.text
 

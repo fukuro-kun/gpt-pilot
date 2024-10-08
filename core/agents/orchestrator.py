@@ -1,3 +1,5 @@
+from core.ui.translations import translate
+
 import asyncio
 from typing import List, Optional, Union
 
@@ -29,11 +31,12 @@ log = get_logger(__name__)
 
 class Orchestrator(BaseAgent):
     """
-    Main agent that controls the flow of the process.
+    Hauptagent, der den Ablauf des Prozesses steuert.
 
-    Based on the current state of the project, the orchestrator invokes
-    all other agents. It is also responsible for determining when each
-    step is done and the project state needs to be committed to the database.
+    Basierend auf dem aktuellen Zustand des Projekts ruft der Orchestrator
+    alle anderen Agenten auf. Er ist auch dafür verantwortlich zu bestimmen,
+    wann jeder Schritt abgeschlossen ist und der Projektzustand in der Datenbank
+    gespeichert werden muss.
     """
 
     agent_type = "orchestrator"
@@ -41,13 +44,13 @@ class Orchestrator(BaseAgent):
 
     async def run(self) -> bool:
         """
-        Run the Orchestrator agent.
+        Führt den Orchestrator-Agenten aus.
 
-        :return: True if the Orchestrator exited successfully, False otherwise.
+        :return: True, wenn der Orchestrator erfolgreich beendet wurde, False andernfalls.
         """
         response = None
 
-        log.info(f"Starting {__name__}.Orchestrator")
+        log.info(translate("starting_orchestrator"))
 
         self.executor = Executor(self.state_manager, self.ui)
         self.process_manager = self.executor.process_manager
@@ -56,49 +59,54 @@ class Orchestrator(BaseAgent):
         await self.init_ui()
         await self.offline_changes_check()
 
-        # TODO: consider refactoring this into two loop; the outer with one iteration per comitted step,
-        # and the inner which runs the agents for the current step until they're done. This would simplify
-        # handle_done() and let us do other per-step processing (eg. describing files) in between agent runs.
+        # TODO: Erwägen Sie, dies in zwei Schleifen umzugestalten; die äußere mit einer Iteration pro gespeichertem Schritt,
+        # und die innere, die die Agenten für den aktuellen Schritt ausführt, bis sie fertig sind. Dies würde
+        # handle_done() vereinfachen und uns ermöglichen, andere Verarbeitungen pro Schritt (z.B. Beschreiben von Dateien)
+        # zwischen den Agentenausführungen durchzuführen.
         while True:
             await self.update_stats()
 
             agent = self.create_agent(response)
 
-            # In case where agent is a list, run all agents in parallel.
-            # Only one agent type can be run in parallel at a time (for now). See handle_parallel_responses().
+            # Falls der Agent eine Liste ist, führen Sie alle Agenten parallel aus.
+            # Es kann nur ein Agententyp gleichzeitig parallel ausgeführt werden (vorerst). Siehe handle_parallel_responses().
             if isinstance(agent, list):
                 tasks = [single_agent.run() for single_agent in agent]
                 log.debug(
-                    f"Running agents {[a.__class__.__name__ for a in agent]} (step {self.current_state.step_index})"
+                    translate("running_multiple_agents",
+                              agents=[a.__class__.__name__ for a in agent],
+                              step=self.current_state.step_index)
                 )
                 responses = await asyncio.gather(*tasks)
                 response = self.handle_parallel_responses(agent[0], responses)
             else:
-                log.debug(f"Running agent {agent.__class__.__name__} (step {self.current_state.step_index})")
+                log.debug(translate("running_agent",
+                                    agent=agent.__class__.__name__,
+                                    step=self.current_state.step_index))
                 response = await agent.run()
 
             if response.type == ResponseType.EXIT:
-                log.debug(f"Agent {agent.__class__.__name__} requested exit")
+                log.debug(translate("agent_requested_exit", agent=agent.__class__.__name__))
                 break
 
             if response.type == ResponseType.DONE:
                 response = await self.handle_done(agent, response)
                 continue
 
-        # TODO: rollback changes to "next" so they aren't accidentally committed?
+        # TODO: Änderungen an "next" zurücksetzen, damit sie nicht versehentlich gespeichert werden?
         return True
 
     def handle_parallel_responses(self, agent: BaseAgent, responses: List[AgentResponse]) -> AgentResponse:
         """
-        Handle responses from agents that were run in parallel.
+        Verarbeitet Antworten von Agenten, die parallel ausgeführt wurden.
 
-        This method is called when multiple agents are run in parallel, and it
-        should return a single response that represents the combined responses
-        of all agents.
+        Diese Methode wird aufgerufen, wenn mehrere Agenten parallel ausgeführt werden,
+        und sie sollte eine einzelne Antwort zurückgeben, die die kombinierten Antworten
+        aller Agenten repräsentiert.
 
-        :param agent: The original agent that was run in parallel.
-        :param responses: List of responses from all agents.
-        :return: Combined response.
+        :param agent: Der ursprüngliche Agent, der parallel ausgeführt wurde.
+        :param responses: Liste der Antworten von allen Agenten.
+        :return: Kombinierte Antwort.
         """
         response = AgentResponse.done(agent)
         if isinstance(agent, CodeMonkey):
@@ -111,59 +119,53 @@ class Orchestrator(BaseAgent):
                 response = AgentResponse.input_required(agent, files)
             return response
         else:
-            raise ValueError(f"Unhandled parallel agent type: {agent.__class__.__name__}")
+            raise ValueError(translate("unhandled_parallel_agent_type", agent_type=agent.__class__.__name__))
 
     async def offline_changes_check(self):
         """
-        Check for changes outside Pythagora.
+        Überprüft auf Änderungen außerhalb von Pythagora.
 
-        If there are changes, ask the user if they want to keep them, and
-        import if needed.
+        Wenn es Änderungen gibt, fragt der Benutzer, ob er sie behalten möchte,
+        und importiert sie bei Bedarf.
         """
 
-        log.info("Checking for offline changes.")
+        log.info(translate("checking_offline_changes"))
         modified_files = await self.state_manager.get_modified_files_with_content()
 
         if self.state_manager.workspace_is_empty():
-            # NOTE: this will currently get triggered on a new project, but will do
-            # nothing as there's no files in the database.
-            log.info("Detected empty workspace, restoring state from the database.")
+            # HINWEIS: Dies wird derzeit bei einem neuen Projekt ausgelöst, wird aber
+            # nichts tun, da keine Dateien in der Datenbank vorhanden sind.
+            log.info(translate("empty_workspace_detected"))
             await self.state_manager.restore_files()
         elif modified_files:
-            await self.send_message(f"We found {len(modified_files)} new and/or modified files.")
+            await self.send_message(translate("found_modified_files", count=len(modified_files)))
             await self.ui.send_modified_files(modified_files)
-            hint = "".join(
-                [
-                    "If you would like Pythagora to import those changes, click 'Yes'.\n",
-                    "Clicking 'No' means Pythagora will restore (overwrite) all files to the last stored state.\n",
-                ]
-            )
+            hint = translate("keep_changes_hint")
             use_changes = await self.ask_question(
-                question="Would you like to keep your changes?",
+                question=translate("keep_changes_question"),
                 buttons={
-                    "yes": "Yes, keep my changes",
-                    "no": "No, restore last Pythagora state",
+                    "yes": translate("yes_keep_changes"),
+                    "no": translate("no_restore_state"),
                 },
                 buttons_only=True,
                 hint=hint,
             )
             if use_changes.button == "yes":
-                log.debug("Importing offline changes into Pythagora.")
+                log.debug(translate("importing_offline_changes"))
                 await self.import_files()
             else:
-                log.debug("Restoring last stored state.")
+                log.debug(translate("restoring_last_state"))
                 await self.state_manager.restore_files()
 
-        log.info("Offline changes check done.")
+        log.info(translate("offline_changes_check_done"))
 
     async def handle_done(self, agent: BaseAgent, response: AgentResponse) -> AgentResponse:
         """
-        Handle the DONE response from the agent and commit current state to the database.
+        Verarbeitet die DONE-Antwort vom Agenten und speichert den aktuellen Zustand in der Datenbank.
 
-        This also checks for any files created or modified outside Pythagora and
-        imports them. If any of the files require input from the user, the returned response
-        will trigger the HumanInput agent to ask the user to provide the required input.
-
+        Dies überprüft auch auf Dateien, die außerhalb von Pythagora erstellt oder geändert wurden,
+        und importiert sie. Wenn eine der Dateien eine Eingabe vom Benutzer erfordert, wird die
+        zurückgegebene Antwort den HumanInput-Agenten auslösen, um den Benutzer zur Eingabe aufzufordern.
         """
         n_epics = len(self.next_state.epics)
         n_finished_epics = n_epics - len(self.next_state.unfinished_epics)
@@ -175,24 +177,29 @@ class Orchestrator(BaseAgent):
         n_finished_steps = n_steps - len(self.next_state.unfinished_steps)
 
         log.debug(
-            f"Agent {agent.__class__.__name__} is done, "
-            f"committing state for step {self.current_state.step_index}: "
-            f"{n_finished_epics}/{n_epics} epics, "
-            f"{n_finished_tasks}/{n_tasks} tasks, "
-            f"{n_finished_iterations}/{n_iterations} iterations, "
-            f"{n_finished_steps}/{n_steps} dev steps."
+            translate("agent_done_log",
+                      agent=agent.__class__.__name__,
+                      step=self.current_state.step_index,
+                      finished_epics=n_finished_epics,
+                      total_epics=n_epics,
+                      finished_tasks=n_finished_tasks,
+                      total_tasks=n_tasks,
+                      finished_iterations=n_finished_iterations,
+                      total_iterations=n_iterations,
+                      finished_steps=n_finished_steps,
+                      total_steps=n_steps)
         )
         await self.state_manager.commit()
 
-        # If there are any new or modified files changed outside Pythagora,
-        # this is a good time to add them to the project. If any of them have
-        # INPUT_REQUIRED, we'll first ask the user to provide the required input.
+        # Wenn es neue oder geänderte Dateien gibt, die außerhalb von Pythagora geändert wurden,
+        # ist dies ein guter Zeitpunkt, um sie zum Projekt hinzuzufügen. Wenn eine von ihnen
+        # INPUT_REQUIRED hat, werden wir zuerst den Benutzer bitten, die erforderliche Eingabe zu machen.
         import_files_response = await self.import_files()
 
-        # If any of the files are missing metadata/descriptions, those need to be filled-in
+        # Wenn einige der Dateien fehlende Metadaten/Beschreibungen haben, müssen diese ausgefüllt werden
         missing_descriptions = [file.path for file in self.current_state.files if not file.meta.get("description")]
         if missing_descriptions:
-            log.debug(f"Some files are missing descriptions: {', '.join(missing_descriptions)}, requesting analysis")
+            log.debug(translate("files_missing_descriptions", files=', '.join(missing_descriptions)))
             return AgentResponse.describe_files(self)
 
         return import_files_response
@@ -206,7 +213,7 @@ class Orchestrator(BaseAgent):
             if prev_response.type == ResponseType.DESCRIBE_FILES:
                 return CodeMonkey(self.state_manager, self.ui, prev_response=prev_response)
             if prev_response.type == ResponseType.INPUT_REQUIRED:
-                # FIXME: HumanInput should be on the whole time and intercept chat/interrupt
+                # FIXME: HumanInput sollte die ganze Zeit aktiv sein und Chat/Unterbrechungen abfangen
                 return HumanInput(self.state_manager, self.ui, prev_response=prev_response)
             if prev_response.type == ResponseType.IMPORT_PROJECT:
                 return Importer(self.state_manager, self.ui, prev_response=prev_response)
@@ -217,78 +224,78 @@ class Orchestrator(BaseAgent):
 
         if not state.specification.description:
             if state.files:
-                # The project has been imported, but not analyzed yet
+                # Das Projekt wurde importiert, aber noch nicht analysiert
                 return Importer(self.state_manager, self.ui)
             else:
-                # New project: ask the Spec Writer to refine and save the project specification
+                # Neues Projekt: Bitten Sie den Spec Writer, die Projektspezifikation zu verfeinern und zu speichern
                 return SpecWriter(self.state_manager, self.ui, process_manager=self.process_manager)
         elif not state.specification.architecture:
-            # Ask the Architect to design the project architecture and determine dependencies
+            # Bitten Sie den Architekten, die Projektarchitektur zu entwerfen und Abhängigkeiten zu bestimmen
             return Architect(self.state_manager, self.ui, process_manager=self.process_manager)
         elif (
             not state.epics
             or not self.current_state.unfinished_tasks
             or (state.specification.templates and not state.files)
         ):
-            # Ask the Tech Lead to break down the initial project or feature into tasks and apply project templates
+            # Bitten Sie den Tech Lead, das initiale Projekt oder Feature in Aufgaben aufzuteilen und Projekttemplates anzuwenden
             return TechLead(self.state_manager, self.ui, process_manager=self.process_manager)
 
-        # Current task status must be checked before Developer is called because we might want
-        # to skip it instead of breaking it down
+        # Der aktuelle Aufgabenstatus muss überprüft werden, bevor Developer aufgerufen wird, da wir ihn
+        # möglicherweise überspringen möchten, anstatt ihn aufzuschlüsseln
         current_task_status = state.current_task.get("status") if state.current_task else None
         if current_task_status:
-            # Status of the current task is set first time after the task was reviewed by user
-            log.info(f"Status of current task: {current_task_status}")
+            # Der Status der aktuellen Aufgabe wird zum ersten Mal gesetzt, nachdem die Aufgabe vom Benutzer überprüft wurde
+            log.info(translate("current_task_status", status=current_task_status))
             if current_task_status == TaskStatus.REVIEWED:
-                # User reviewed the task, call TechnicalWriter to see if documentation needs to be updated
+                # Benutzer hat die Aufgabe überprüft, rufen Sie TechnicalWriter auf, um zu sehen, ob die Dokumentation aktualisiert werden muss
                 return TechnicalWriter(self.state_manager, self.ui)
             elif current_task_status in [TaskStatus.DOCUMENTED, TaskStatus.SKIPPED]:
-                # Task is fully done or skipped, call TaskCompleter to mark it as completed
+                # Aufgabe ist vollständig erledigt oder übersprungen, rufen Sie TaskCompleter auf, um sie als abgeschlossen zu markieren
                 return TaskCompleter(self.state_manager, self.ui)
 
         if not state.steps and not state.iterations:
-            # Ask the Developer to break down current task into actionable steps
+            # Bitten Sie den Developer, die aktuelle Aufgabe in ausführbare Schritte aufzuteilen
             return Developer(self.state_manager, self.ui)
 
         if state.current_step:
-            # Execute next step in the task
-            # TODO: this can be parallelized in the future
+            # Führen Sie den nächsten Schritt in der Aufgabe aus
+            # TODO: Dies kann in Zukunft parallelisiert werden
             return self.create_agent_for_step(state.current_step)
 
         if state.unfinished_iterations:
             current_iteration_status = state.current_iteration["status"]
             if current_iteration_status == IterationStatus.HUNTING_FOR_BUG:
-                # Triggering the bug hunter to start the hunt
+                # Auslösen des Bug Hunters, um die Suche zu beginnen
                 return BugHunter(self.state_manager, self.ui)
             elif current_iteration_status == IterationStatus.START_PAIR_PROGRAMMING:
-                # Pythagora cannot solve the issue so we're starting pair programming
+                # Pythagora kann das Problem nicht lösen, also beginnen wir mit Pair Programming
                 return BugHunter(self.state_manager, self.ui)
             elif current_iteration_status == IterationStatus.AWAITING_LOGGING:
-                # Get the developer to implement logs needed for debugging
+                # Lassen Sie den Developer Logs implementieren, die für das Debugging benötigt werden
                 return Developer(self.state_manager, self.ui)
             elif current_iteration_status == IterationStatus.AWAITING_BUG_FIX:
-                # Get the developer to implement the bug fix for debugging
+                # Lassen Sie den Developer den Bug-Fix für das Debugging implementieren
                 return Developer(self.state_manager, self.ui)
             elif current_iteration_status == IterationStatus.IMPLEMENT_SOLUTION:
-                # Get the developer to implement the "change" requested by the user
+                # Lassen Sie den Developer die vom Benutzer angeforderte "Änderung" implementieren
                 return Developer(self.state_manager, self.ui)
             elif current_iteration_status == IterationStatus.AWAITING_USER_TEST:
-                # Getting the bug hunter to ask the human to test the bug fix
+                # Lassen Sie den Bug Hunter den Menschen bitten, den Bug-Fix zu testen
                 return BugHunter(self.state_manager, self.ui)
             elif current_iteration_status == IterationStatus.AWAITING_BUG_REPRODUCTION:
-                # Getting the bug hunter to ask the human to reproduce the bug
+                # Lassen Sie den Bug Hunter den Menschen bitten, den Bug zu reproduzieren
                 return BugHunter(self.state_manager, self.ui)
             elif current_iteration_status == IterationStatus.FIND_SOLUTION:
-                # Find solution to the iteration problem
+                # Finden Sie eine Lösung für das Iterationsproblem
                 return Troubleshooter(self.state_manager, self.ui)
             elif current_iteration_status == IterationStatus.PROBLEM_SOLVER:
-                # Call Problem Solver if the user said "I'm stuck in a loop"
+                # Rufen Sie den Problem Solver auf, wenn der Benutzer sagt "Ich stecke in einer Schleife fest"
                 return ProblemSolver(self.state_manager, self.ui)
             elif current_iteration_status == IterationStatus.NEW_FEATURE_REQUESTED:
-                # Call Spec Writer to add the "change" requested by the user to project specification
+                # Rufen Sie Spec Writer auf, um die vom Benutzer angeforderte "Änderung" zur Projektspezifikation hinzuzufügen
                 return SpecWriter(self.state_manager, self.ui)
 
-        # We have just finished the task, call Troubleshooter to ask the user to review
+        # Wir haben gerade die Aufgabe beendet, rufen Sie Troubleshooter auf, um den Benutzer um eine Überprüfung zu bitten
         return Troubleshooter(self.state_manager, self.ui)
 
     def create_agent_for_step(self, step: dict) -> Union[List[BaseAgent], BaseAgent]:
@@ -308,7 +315,7 @@ class Orchestrator(BaseAgent):
         elif step_type == "create_readme":
             return TechnicalWriter(self.state_manager, self.ui)
         else:
-            raise ValueError(f"Unknown step type: {step_type}")
+            raise ValueError(translate("unknown_step_type", step_type=step_type))
 
     async def import_files(self) -> Optional[AgentResponse]:
         imported_files, removed_paths = await self.state_manager.import_files()
@@ -316,9 +323,9 @@ class Orchestrator(BaseAgent):
             return None
 
         if imported_files:
-            log.info(f"Imported new/changed files to project: {', '.join(f.path for f in imported_files)}")
+            log.info(translate("imported_files", files=', '.join(f.path for f in imported_files)))
         if removed_paths:
-            log.info(f"Removed files from project: {', '.join(removed_paths)}")
+            log.info(translate("removed_files", files=', '.join(removed_paths)))
 
         input_required_files: list[dict[str, int]] = []
         for file in imported_files:
@@ -326,12 +333,12 @@ class Orchestrator(BaseAgent):
                 input_required_files.append({"file": file.path, "line": line})
 
         if input_required_files:
-            # This will trigger the HumanInput agent to ask the user to provide the required changes
-            # If the user changes anything (removes the "required changes"), the file will be re-imported.
+            # Dies wird den HumanInput-Agenten auslösen, um den Benutzer aufzufordern, die erforderlichen Änderungen vorzunehmen
+            # Wenn der Benutzer etwas ändert (die "erforderlichen Änderungen" entfernt), wird die Datei erneut importiert.
             return AgentResponse.input_required(self, input_required_files)
 
-        # Commit the newly imported file
-        log.debug(f"Committing imported/removed files as a separate step {self.current_state.step_index}")
+        # Speichern Sie die neu importierte Datei
+        log.debug(translate("committing_imported_files", step=self.current_state.step_index))
         await self.state_manager.commit()
         return None
 
@@ -342,7 +349,7 @@ class Orchestrator(BaseAgent):
         if self.current_state.epics:
             await self.ui.send_project_stage(ProjectStage.CODING)
             if len(self.current_state.epics) > 2:
-                # We only want to send previous features, ie. exclude current one and the initial project (first epic)
+                # Wir möchten nur vorherige Features senden, d.h. das aktuelle und das initiale Projekt (erstes Epic) ausschließen
                 await self.ui.send_features_list([e["description"] for e in self.current_state.epics[1:-1]])
 
         elif self.current_state.specification.description:

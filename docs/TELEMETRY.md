@@ -1,49 +1,49 @@
-## Telemetry in Pythagora
+## Telemetrie in Pythagora
 
-At Pythagora, we are dedicated to improving your experience and the overall quality of our software. To achieve this, we gather anonymous telemetry data which helps us understand how the tool is being used and identify areas for improvement.
+Bei Pythagora sind wir bestrebt, Ihre Erfahrung und die Gesamtqualität unserer Software zu verbessern. Um dies zu erreichen, sammeln wir anonyme Telemetriedaten, die uns helfen zu verstehen, wie das Tool genutzt wird und Bereiche für Verbesserungen zu identifizieren.
 
-### What We Collect
+### Was wir sammeln
 
-The telemetry data we collect includes:
+Die Telemetriedaten, die wir sammeln, umfassen:
 
-- **Total Runtime**: The total time Pythagora was active and running.
-- **Command Runs**: How many commands were executed during a session.
-- **Development Steps**: The number of development steps that were performed.
-- **LLM Requests**: The number of LLM requests made.
-- **User Inputs**: The number of times you provide input to the tool.
-- **Operating System**: The operating system you are using (and Linux distro if applicable).
-- **Python Version**: The version of Python you are using.
-- **GPT Pilot Version**: The version of Pythagora you are using.
-- **LLM Model**: LLM model(s) used for the session.
-- **Time**: How long it took to generate a project.
-- **Initial prompt**: App description used to create app (after Specification Writer Agent).
-- **Architecture**: Architecture designed by Pythagora for the app.
-- **Documentation**: Pythagora documentation that was used while creating the app.
-- **User Email**: User email (if using Pythagora VSCode Extgension, or if explicitly provided when running Pythagora from the command line).
-- **Pythagora Tasks/Steps**: Information about the development tasks and steps Pythagora does while coding the app.
+- **Gesamtlaufzeit**: Die Gesamtzeit, in der Pythagora aktiv und in Betrieb war.
+- **Ausgeführte Befehle**: Wie viele Befehle während einer Sitzung ausgeführt wurden.
+- **Entwicklungsschritte**: Die Anzahl der durchgeführten Entwicklungsschritte.
+- **LLM-Anfragen**: Die Anzahl der getätigten LLM-Anfragen.
+- **Benutzereingaben**: Die Anzahl der Male, die Sie Eingaben für das Tool gemacht haben.
+- **Betriebssystem**: Das von Ihnen verwendete Betriebssystem (und Linux-Distribution, falls zutreffend).
+- **Python-Version**: Die von Ihnen verwendete Python-Version.
+- **GPT Pilot-Version**: Die von Ihnen verwendete Pythagora-Version.
+- **LLM-Modell**: Das/die für die Sitzung verwendete(n) LLM-Modell(e).
+- **Zeit**: Wie lange es gedauert hat, ein Projekt zu generieren.
+- **Anfängliche Eingabeaufforderung**: App-Beschreibung, die zur Erstellung der App verwendet wurde (nach dem Specification Writer Agent).
+- **Architektur**: Von Pythagora für die App entworfene Architektur.
+- **Dokumentation**: Pythagora-Dokumentation, die während der Erstellung der App verwendet wurde.
+- **Benutzer-E-Mail**: Benutzer-E-Mail (bei Verwendung der Pythagora VSCode-Erweiterung oder wenn bei der Ausführung von Pythagora über die Befehlszeile explizit angegeben).
+- **Pythagora-Aufgaben/Schritte**: Informationen über die Entwicklungsaufgaben und -schritte, die Pythagora während der Codierung der App durchführt.
 
-All the data points are listed in [core.telemetry:Telemetry.clear_data()](../core/telemetry/__init__.py).
+Alle Datenpunkte sind in [core.telemetry:Telemetry.clear_data()](../core/telemetry/__init__.py) aufgelistet.
 
-### How We Use This Data
+### Wie wir diese Daten verwenden
 
-We use this data to:
+Wir verwenden diese Daten, um:
 
-- Monitor the performance and reliability of Pythagora.
-- Understand usage patterns to guide our development and feature prioritization.
-- Identify common workflows and improve the user experience.
-- Ensure the scalability and efficiency of our language model interactions.
+- Die Leistung und Zuverlässigkeit von Pythagora zu überwachen.
+- Nutzungsmuster zu verstehen, um unsere Entwicklung und Priorisierung von Funktionen zu leiten.
+- Häufige Arbeitsabläufe zu identifizieren und die Benutzererfahrung zu verbessern.
+- Die Skalierbarkeit und Effizienz unserer Sprachmodellinteraktionen sicherzustellen.
 
-### Your Privacy
+### Ihre Privatsphäre
 
-Your privacy is important to us. The data collected is purely for internal analysis and will not be shared with third parties. No personal information is collected, and telemetry data is completely anonymized. We adhere to best practices in data security to protect this information.
+Ihre Privatsphäre ist uns wichtig. Die gesammelten Daten dienen ausschließlich der internen Analyse und werden nicht an Dritte weitergegeben. Es werden keine personenbezogenen Informationen gesammelt, und die Telemetriedaten sind vollständig anonymisiert. Wir halten uns an bewährte Praktiken der Datensicherheit, um diese Informationen zu schützen.
 
-### Opting Out
+### Opt-out
 
-We believe in transparency and control. If you prefer not to send telemetry data, you can opt-out at any time by setting `telemetry.enabled` to `false` in your `~/.gpt-pilot/config.json` configuration file.
+Wir glauben an Transparenz und Kontrolle. Wenn Sie es vorziehen, keine Telemetriedaten zu senden, können Sie dies jederzeit deaktivieren, indem Sie `telemetry.enabled` in Ihrer `~/.gpt-pilot/config.json` Konfigurationsdatei auf `false` setzen.
 
-After you update this setting, Pythagora will no longer collect telemetry data from your machine.
+Nachdem Sie diese Einstellung aktualisiert haben, wird Pythagora keine Telemetriedaten mehr von Ihrem Gerät sammeln.
 
-### Questions and Feedback
-If you have questions about our telemetry practices or would like to provide feedback, please open an issue in our repository, and we will be happy to engage with you.
+### Fragen und Feedback
+Wenn Sie Fragen zu unseren Telemetriepraktiken haben oder Feedback geben möchten, öffnen Sie bitte ein Issue in unserem Repository. Wir freuen uns darauf, mit Ihnen in Kontakt zu treten.
 
-Thank you for supporting Pythagora and helping us make it better for everyone.
+Vielen Dank, dass Sie Pythagora unterstützen und uns helfen, es für alle zu verbessern.

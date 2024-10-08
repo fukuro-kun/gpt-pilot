@@ -313,6 +313,7 @@ class Config(_StrictModel):
     """
     Pythagora Core configuration
     """
+    language: str = Field(default="de", description="Language for user interface (e.g. 'en' or 'de')")
 
     llm: dict[LLMProvider, ProviderConfig] = Field(
         default={

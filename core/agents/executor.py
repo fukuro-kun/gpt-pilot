@@ -12,10 +12,11 @@ from core.proc.exec_log import ExecLog
 from core.proc.process_manager import ProcessManager
 from core.state.state_manager import StateManager
 from core.ui.base import AgentSource, UIBase, UISource
+from core.ui.translations import translate
 
 log = get_logger(__name__)
 
-CMD_OUTPUT_SOURCE_NAME = "Command output"
+CMD_OUTPUT_SOURCE_NAME = translate("command_output")
 CMD_OUTPUT_SOURCE_TYPE = "cli-output"
 
 
@@ -34,7 +35,7 @@ class CommandResult(BaseModel):
 
 class Executor(BaseAgent):
     agent_type = "executor"
-    display_name = "Executor"
+    display_name = translate("executor_display_name")
 
     def __init__(
         self,
@@ -78,19 +79,19 @@ class Executor(BaseAgent):
         timeout = options.get("timeout")
 
         if timeout:
-            q = f"Can I run command: {cmd} with {timeout}s timeout?"
+            q = translate("run_command_with_timeout", command=cmd, timeout=timeout)
         else:
-            q = f"Can I run command: {cmd}?"
+            q = translate("run_command", command=cmd)
 
         confirm = await self.ask_question(
             q,
-            buttons={"yes": "Yes", "no": "No"},
+            buttons={"yes": translate("yes"), "no": translate("no")},
             default="yes",
             buttons_only=True,
         )
         if confirm.button == "no":
             log.info(f"Skipping command execution of `{cmd}` (requested by user)")
-            await self.send_message(f"Skipping command {cmd}")
+            await self.send_message(translate("skipping_command", command=cmd))
             self.complete()
             self.next_state.action = f'Skip "{cmd_name}"'
             return AgentResponse.done(self)

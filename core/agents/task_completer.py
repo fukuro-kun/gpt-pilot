@@ -2,13 +2,14 @@ from core.agents.base import BaseAgent
 from core.agents.response import AgentResponse
 from core.log import get_logger
 from core.telemetry import telemetry
+from core.ui.translations import translate
 
 log = get_logger(__name__)
 
 
 class TaskCompleter(BaseAgent):
     agent_type = "pythagora"
-    display_name = "Pythagora"
+    display_name = translate("task_completer_display_name")
 
     async def run(self) -> AgentResponse:
         current_task_index1 = self.current_state.tasks.index(self.current_state.current_task) + 1

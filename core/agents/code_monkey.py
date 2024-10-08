@@ -1,3 +1,5 @@
+# code_monkey.py
+
 import re
 from difflib import unified_diff
 from enum import Enum
@@ -11,6 +13,7 @@ from core.agents.response import AgentResponse, ResponseType
 from core.config import CODE_MONKEY_AGENT_NAME, CODE_REVIEW_AGENT_NAME, DESCRIBE_FILES_AGENT_NAME
 from core.llm.parser import JSONParser, OptionalCodeBlockParser
 from core.log import get_logger
+from core.ui.translations import translate
 
 log = get_logger(__name__)
 
@@ -56,7 +59,7 @@ class FileDescription(BaseModel):
 
 class CodeMonkey(BaseAgent):
     agent_type = "code-monkey"
-    display_name = "Code Monkey"
+    display_name = translate("code_monkey_display_name")
 
     async def run(self) -> AgentResponse:
         if self.prev_response and self.prev_response.type == ResponseType.DESCRIBE_FILES:
@@ -82,13 +85,13 @@ class CodeMonkey(BaseAgent):
             attempt = data["attempt"] + 1
             feedback = data["feedback"]
             log.debug(f"Fixing file {file_name} after review feedback: {feedback} ({attempt}. attempt)")
-            await self.ui.send_file_status(file_name, "reworking")
+            await self.ui.send_file_status(file_name, translate("reworking"))
         else:
             log.debug(f"Implementing file {file_name}")
             if data is None:
-                await self.ui.send_file_status(file_name, "updating" if file_content else "creating")
+                await self.ui.send_file_status(file_name, translate("updating" if file_content else "creating"))
             else:
-                await self.ui.send_file_status(file_name, "reworking")
+                await self.ui.send_file_status(file_name, translate("reworking"))
             self.next_state.action = "Updating files"
             attempt = 1
             feedback = None
@@ -146,7 +149,7 @@ class CodeMonkey(BaseAgent):
             if content == "":
                 file.meta = {
                     **file.meta,
-                    "description": "Empty file",
+                    "description": translate("empty_file"),
                     "references": [],
                 }
                 continue
@@ -175,7 +178,7 @@ class CodeMonkey(BaseAgent):
     # ------------------------------
 
     async def run_code_review(self, data: Optional[dict]) -> Union[AgentResponse, dict]:
-        await self.ui.send_file_status(data["path"], "reviewing")
+        await self.ui.send_file_status(data["path"], translate("reviewing"))
         if (
             data is not None
             and not data["old_content"]
@@ -202,7 +205,7 @@ class CodeMonkey(BaseAgent):
             return await self.accept_changes(data["path"], data["old_content"], approved_content)
 
     async def accept_changes(self, file_path: str, old_content: str, new_content: str) -> AgentResponse:
-        await self.ui.send_file_status(file_path, "done")
+        await self.ui.send_file_status(file_path, translate("done"))
 
         n_new_lines, n_del_lines = self.get_line_changes(old_content, new_content)
         await self.ui.generate_diff(file_path, old_content, new_content, n_new_lines, n_del_lines)

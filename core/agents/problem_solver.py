@@ -9,12 +9,12 @@ from core.agents.troubleshooter import IterationPromptMixin
 from core.db.models.project_state import IterationStatus
 from core.llm.parser import JSONParser
 from core.log import get_logger
+from core.ui.translations import translate
 
 log = get_logger(__name__)
 
 
 class AlternativeSolutions(BaseModel):
-    # FIXME: This is probably extra leftover from some dead code in the old implementation
     description_of_tried_solutions: str = Field(
         description="A description of the solutions that were tried to solve the recurring issue that was labeled as loop by the user.",
     )
@@ -25,7 +25,7 @@ class AlternativeSolutions(BaseModel):
 
 class ProblemSolver(IterationPromptMixin, BaseAgent):
     agent_type = "problem-solver"
-    display_name = "Problem Solver"
+    display_name = translate("problem_solver_display_name")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -75,15 +75,11 @@ class ProblemSolver(IterationPromptMixin, BaseAgent):
     async def try_alternative_solutions(self) -> AgentResponse:
         preferred_solution = await self.ask_for_preferred_solution()
         if preferred_solution is None:
-            # TODO: We have several alternative solutions but the user didn't choose any.
-            # This means the user either needs expert help, or that they need to go back and
-            # maybe rephrase the tasks or even the project specs.
-            # For now, we'll just mark these as not working and try to regenerate.
             self.next_state_iteration["alternative_solutions"] = [
                 {
                     **s,
                     "tried": True,
-                    "user_feedback": s["user_feedback"] or "That doesn't sound like a good idea, try something else.",
+                    "user_feedback": s["user_feedback"] or translate("solution_not_good"),
                 }
                 for s in self.possible_solutions
             ]
@@ -109,11 +105,11 @@ class ProblemSolver(IterationPromptMixin, BaseAgent):
 
         for i in range(len(solutions)):
             buttons[str(i)] = str(i + 1)
-        buttons["none"] = "None of these"
+        buttons["none"] = translate("none_of_these")
 
         solutions_txt = "\n\n".join([f"{i+1}: {s['description']}" for i, s in enumerate(solutions)])
         user_response = await self.ask_question(
-            "Choose which solution would you like Pythagora to try next:\n\n" + solutions_txt,
+            translate("choose_solution") + "\n\n" + solutions_txt,
             buttons=buttons,
             default="0",
             buttons_only=True,

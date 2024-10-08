@@ -1,8 +1,10 @@
 from enum import Enum
-from typing import Optional
+from typing import Optional, List, Dict
 
 from pydantic import BaseModel
 
+def empty_list() -> List:
+    return []
 
 class ProjectStage(str, Enum):
     DESCRIPTION = "project_description"
@@ -198,8 +200,8 @@ class UIBase:
 
     async def send_epics_and_tasks(
         self,
-        epics: list[dict] = None,
-        tasks: list[dict] = None,
+        epics: List[Dict] = empty_list(),
+        tasks: List[Dict] = empty_list(),
     ):
         """
         Send epics and tasks info to the UI.
@@ -217,7 +219,7 @@ class UIBase:
         source: str,
         status: str,
         source_index: int = 1,
-        tasks: list[dict] = None,
+        tasks: List[Dict] = empty_list(),
     ):
         """
         Send a task progress update to the UI.
@@ -251,12 +253,15 @@ class UIBase:
 
     async def send_modified_files(
         self,
-        modified_files: dict[str, str, str],
+        modified_files: List[Dict[str, str]],
     ):
         """
         Send a list of modified files to the UI.
 
-        :param modified_files: List of modified files.
+        :param modified_files: List of dictionaries, each containing:
+                               - 'path': str (file path)
+                               - 'file_old': str (previous content)
+                               - 'file_new': str (new content)
         """
         raise NotImplementedError()
 

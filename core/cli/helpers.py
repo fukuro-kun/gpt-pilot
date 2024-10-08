@@ -1,3 +1,4 @@
+# core/cli/helpers.py
 import json
 import os
 import os.path
@@ -18,144 +19,144 @@ from core.ui.base import UIBase
 from core.ui.console import PlainConsoleUI
 from core.ui.ipc_client import IPCClientUI
 from core.ui.virtual import VirtualUI
-
+from core.ui.translations import translate
 
 def parse_llm_endpoint(value: str) -> Optional[tuple[LLMProvider, str]]:
     """
-    Parse --llm-endpoint command-line option.
+    Parst die --llm-endpoint Kommandozeilenoption.
 
-    Option syntax is: --llm-endpoint <provider>:<url>
+    Optionssyntax ist: --llm-endpoint <provider>:<url>
 
-    :param value: Argument value.
-    :return: Tuple with LLM provider and URL, or None if the option wasn't provided.
+    :param value: Argumentwert.
+    :return: Tuple mit LLM-Provider und URL, oder None, wenn die Option nicht angegeben wurde.
     """
     if not value:
         return None
 
     parts = value.split(":", 1)
     if len(parts) != 2:
-        raise ArgumentTypeError("Invalid LLM endpoint format; expected 'provider:url'")
+        raise ArgumentTypeError(translate("invalid_llm_endpoint_format"))
 
     try:
         provider = LLMProvider(parts[0])
     except ValueError as err:
-        raise ArgumentTypeError(f"Unsupported LLM provider: {err}")
+        raise ArgumentTypeError(f"Nicht unterstützter LLM-Provider: {err}")
     url = urlparse(parts[1])
     if url.scheme not in ("http", "https"):
-        raise ArgumentTypeError(f"Invalid LLM endpoint URL: {parts[1]}")
+        raise ArgumentTypeError(translate("invalid_llm_endpoint_url", url=parts[1]))
 
     return provider, url.geturl()
 
 
 def parse_llm_key(value: str) -> Optional[tuple[LLMProvider, str]]:
     """
-    Parse --llm-key command-line option.
+    Parst die --llm-key Kommandozeilenoption.
 
-    Option syntax is: --llm-key <provider>:<key>
+    Optionssyntax ist: --llm-key <provider>:<key>
 
-    :param value: Argument value.
-    :return: Tuple with LLM provider and key, or None if if the option wasn't provided.
+    :param value: Argumentwert.
+    :return: Tuple mit LLM-Provider und Schlüssel, oder None, wenn die Option nicht angegeben wurde.
     """
     if not value:
         return None
 
     parts = value.split(":", 1)
     if len(parts) != 2:
-        raise ArgumentTypeError("Invalid LLM endpoint format; expected 'provider:key'")
+        raise ArgumentTypeError(translate("invalid_llm_key_format"))
 
     try:
         provider = LLMProvider(parts[0])
     except ValueError as err:
-        raise ArgumentTypeError(f"Unsupported LLM provider: {err}")
+        raise ArgumentTypeError(f"Nicht unterstützter LLM-Provider: {err}")
 
     return provider, parts[1]
 
 
 def parse_arguments() -> Namespace:
     """
-    Parse command-line arguments.
+    Parst Kommandozeilenargumente.
 
-    Available arguments:
-        --help: Show the help message
-        --config: Path to the configuration file
-        --show-config: Output the default configuration to stdout
-        --default-config: Output the configuration to stdout
-        --level: Log level (debug,info,warning,error,critical)
-        --database: Database URL
-        --local-ipc-port: Local IPC port to connect to
-        --local-ipc-host: Local IPC host to connect to
-        --version: Show the version and exit
-        --list: List all projects
-        --list-json: List all projects in JSON format
-        --project: Load a specific project
-        --branch: Load a specific branch
-        --step: Load a specific step in a project/branch
-        --llm-endpoint: Use specific API endpoint for the given provider
-        --llm-key: Use specific LLM key for the given provider
-        --import-v0: Import data from a v0 (gpt-pilot) database with the given path
-        --email: User's email address, if provided
-        --extension-version: Version of the VSCode extension, if used
-        --no-check: Disable initial LLM API check
-    :return: Parsed arguments object.
+    Verfügbare Argumente:
+        --help: Zeigt die Hilfemeldung an
+        --config: Pfad zur Konfigurationsdatei
+        --show-config: Gibt die Standardkonfiguration auf stdout aus
+        --default-config: Gibt die Konfiguration auf stdout aus
+        --level: Log-Level (debug,info,warning,error,critical)
+        --database: Datenbank-URL
+        --local-ipc-port: Lokaler IPC-Port für die Verbindung
+        --local-ipc-host: Lokaler IPC-Host für die Verbindung
+        --version: Zeigt die Version an und beendet
+        --list: Listet alle Projekte auf
+        --list-json: Listet alle Projekte im JSON-Format auf
+        --project: Lädt ein bestimmtes Projekt
+        --branch: Lädt einen bestimmten Branch
+        --step: Lädt einen bestimmten Schritt in einem Projekt/Branch
+        --llm-endpoint: Verwendet einen spezifischen API-Endpunkt für den angegebenen Provider
+        --llm-key: Verwendet einen spezifischen LLM-Schlüssel für den angegebenen Provider
+        --import-v0: Importiert Daten aus einer v0 (gpt-pilot) Datenbank mit dem angegebenen Pfad
+        --email: E-Mail-Adresse des Benutzers, falls angegeben
+        --extension-version: Version der VSCode-Erweiterung, falls verwendet
+        --no-check: Deaktiviert die initiale LLM-API-Prüfung
+    :return: Geparste Argumente als Objekt.
     """
     version = get_version()
 
     parser = ArgumentParser()
-    parser.add_argument("--config", help="Path to the configuration file", default="config.json")
-    parser.add_argument("--show-config", help="Output the default configuration to stdout", action="store_true")
-    parser.add_argument("--level", help="Log level (debug,info,warning,error,critical)", required=False)
-    parser.add_argument("--database", help="Database URL", required=False)
-    parser.add_argument("--local-ipc-port", help="Local IPC port to connect to", type=int, required=False)
-    parser.add_argument("--local-ipc-host", help="Local IPC host to connect to", default="localhost", required=False)
+    parser.add_argument("--config", help=translate("config_help"), default="config.json")
+    parser.add_argument("--show-config", help=translate("show_config_help"), action="store_true")
+    parser.add_argument("--level", help=translate("level_help"), required=False)
+    parser.add_argument("--database", help=translate("database_help"), required=False)
+    parser.add_argument("--local-ipc-port", help=translate("local_ipc_port_help"), type=int, required=False)
+    parser.add_argument("--local-ipc-host", help=translate("local_ipc_host_help"), default="localhost", required=False)
     parser.add_argument("--version", action="version", version=version)
-    parser.add_argument("--list", help="List all projects", action="store_true")
-    parser.add_argument("--list-json", help="List all projects in JSON format", action="store_true")
-    parser.add_argument("--project", help="Load a specific project", type=UUID, required=False)
-    parser.add_argument("--branch", help="Load a specific branch", type=UUID, required=False)
-    parser.add_argument("--step", help="Load a specific step in a project/branch", type=int, required=False)
-    parser.add_argument("--delete", help="Delete a specific project", type=UUID, required=False)
+    parser.add_argument("--list", help=translate("list_help"), action="store_true")
+    parser.add_argument("--list-json", help=translate("list_json_help"), action="store_true")
+    parser.add_argument("--project", help=translate("project_help"), type=UUID, required=False)
+    parser.add_argument("--branch", help=translate("branch_help"), type=UUID, required=False)
+    parser.add_argument("--step", help=translate("step_help"), type=int, required=False)
+    parser.add_argument("--delete", help=translate("delete_help"), type=UUID, required=False)
     parser.add_argument(
         "--llm-endpoint",
-        help="Use specific API endpoint for the given provider",
+        help=translate("llm_endpoint_help"),
         type=parse_llm_endpoint,
         action="append",
         required=False,
     )
     parser.add_argument(
         "--llm-key",
-        help="Use specific LLM key for the given provider",
+        help=translate("llm_key_help"),
         type=parse_llm_key,
         action="append",
         required=False,
     )
     parser.add_argument(
         "--import-v0",
-        help="Import data from a v0 (gpt-pilot) database with the given path",
+        help=translate("import_v0_help"),
         required=False,
     )
-    parser.add_argument("--email", help="User's email address", required=False)
-    parser.add_argument("--extension-version", help="Version of the VSCode extension", required=False)
-    parser.add_argument("--no-check", help="Disable initial LLM API check", action="store_true")
+    parser.add_argument("--email", help=translate("email_help"), required=False)
+    parser.add_argument("--extension-version", help=translate("extension_version_help"), required=False)
+    parser.add_argument("--no-check", help=translate("no_check_help"), action="store_true")
     return parser.parse_args()
 
 
 def load_config(args: Namespace) -> Optional[Config]:
     """
-    Load Pythagora JSON configuration file and apply command-line arguments.
+    Lädt die Pythagora JSON-Konfigurationsdatei und wendet Kommandozeilenargumente an.
 
-    :param args: Command-line arguments (at least `config` must be present).
-    :return: Configuration object, or None if config couldn't be loaded.
+    :param args: Kommandozeilenargumente (mindestens `config` muss vorhanden sein).
+    :return: Konfigurationsobjekt oder None, wenn die Konfiguration nicht geladen werden konnte.
     """
     if not os.path.isfile(args.config):
         imported = import_from_dotenv(args.config)
         if not imported:
-            print(f"Configuration file not found: {args.config}; using default", file=sys.stderr)
+            print(f"Konfigurationsdatei nicht gefunden: {args.config}; verwende Standard", file=sys.stderr)
             return get_config()
 
     try:
         config = loader.load(args.config)
     except ValueError as err:
-        print(f"Error parsing config file {args.config}: {err}", file=sys.stderr)
+        print(f"Fehler beim Parsen der Konfigurationsdatei {args.config}: {err}", file=sys.stderr)
         return None
 
     if args.level:
@@ -182,7 +183,7 @@ def load_config(args: Namespace) -> Optional[Config]:
     try:
         Config.model_validate(config)
     except ValueError as err:
-        print(f"Configuration error: {err}", file=sys.stderr)
+        print(f"Konfigurationsfehler: {err}", file=sys.stderr)
         return None
 
     return config
@@ -190,7 +191,7 @@ def load_config(args: Namespace) -> Optional[Config]:
 
 async def list_projects_json(db: SessionManager):
     """
-    List all projects in the database in JSON format.
+    Listet alle Projekte in der Datenbank im JSON-Format auf.
     """
     sm = StateManager(db)
     projects = await sm.list_projects()
@@ -213,12 +214,12 @@ async def list_projects_json(db: SessionManager):
                 if not last_updated or state.created_at > last_updated:
                     last_updated = state.created_at
                 s = {
-                    "name": state.action or f"Step #{state.step_index}",
+                    "name": state.action or f"Schritt #{state.step_index}",
                     "step": state.step_index,
                 }
                 b["steps"].append(s)
             if b["steps"]:
-                b["steps"][-1]["name"] = "Latest step"
+                b["steps"][-1]["name"] = translate("latest_step")
             p["branches"].append(b)
         p["updated_at"] = last_updated.isoformat() if last_updated else None
         data.append(p)
@@ -228,17 +229,17 @@ async def list_projects_json(db: SessionManager):
 
 async def list_projects(db: SessionManager):
     """
-    List all projects in the database.
+    Listet alle Projekte in der Datenbank auf.
     """
     sm = StateManager(db)
     projects = await sm.list_projects()
 
-    print(f"Available projects ({len(projects)}):")
+    print(translate("available_projects", count=len(projects)))
     for project in projects:
         print(f"* {project.name} ({project.id})")
         for branch in project.branches:
             last_step = max(state.step_index for state in branch.states)
-            print(f"  - {branch.name} ({branch.id}) - last step: {last_step}")
+            print(translate("branch_info", name=branch.name, id=branch.id, last_step=last_step))
 
 
 async def load_project(
@@ -248,22 +249,22 @@ async def load_project(
     step_index: Optional[int] = None,
 ) -> bool:
     """
-    Load a project from the database.
+    Lädt ein Projekt aus der Datenbank.
 
-    :param sm: State manager.
-    :param project_id: Project ID (optional, loads the last step in the main branch).
-    :param branch_id: Branch ID (optional, loads the last step in the branch).
-    :param step_index: Step index (optional, loads the state at the given step).
-    :return: True if the project was loaded successfully, False otherwise.
+    :param sm: State Manager.
+    :param project_id: Projekt-ID (optional, lädt den letzten Schritt im Hauptbranch).
+    :param branch_id: Branch-ID (optional, lädt den letzten Schritt im Branch).
+    :param step_index: Schritt-Index (optional, lädt den Zustand beim angegebenen Schritt).
+    :return: True, wenn das Projekt erfolgreich geladen wurde, False sonst.
     """
-    step_txt = f" step {step_index}" if step_index else ""
+    step_txt = f" {translate('step')} {step_index}" if step_index else ""
 
     if branch_id:
         project_state = await sm.load_project(branch_id=branch_id, step_index=step_index)
         if project_state:
             return True
         else:
-            print(f"Branch {branch_id}{step_txt} not found; use --list to list all projects", file=sys.stderr)
+            print(translate("branch_not_found", branch_id=branch_id, step_txt=step_txt), file=sys.stderr)
             return False
 
     elif project_id:
@@ -271,7 +272,7 @@ async def load_project(
         if project_state:
             return True
         else:
-            print(f"Project {project_id}{step_txt} not found; use --list to list all projects", file=sys.stderr)
+            print(translate("project_not_found", project_id=project_id, step_txt=step_txt), file=sys.stderr)
             return False
 
     return False
@@ -279,11 +280,11 @@ async def load_project(
 
 async def delete_project(db: SessionManager, project_id: UUID) -> bool:
     """
-    Delete a project from a database.
+    Löscht ein Projekt aus der Datenbank.
 
-    :param sm: State manager.
-    :param project_id: Project ID.
-    :return: True if project was deleted, False otherwise.
+    :param sm: State Manager.
+    :param project_id: Projekt-ID.
+    :return: True, wenn das Projekt gelöscht wurde, False sonst.
     """
 
     sm = StateManager(db)
@@ -292,7 +293,7 @@ async def delete_project(db: SessionManager, project_id: UUID) -> bool:
 
 def show_config():
     """
-    Print the current configuration to stdout.
+    Gibt die aktuelle Konfiguration auf stdout aus.
     """
     cfg = get_config()
     print(cfg.model_dump_json(indent=2))
@@ -300,12 +301,12 @@ def show_config():
 
 def init() -> tuple[UIBase, SessionManager, Namespace]:
     """
-    Initialize the application.
+    Initialisiert die Anwendung.
 
-    Loads configuration, sets up logging and UI, initializes the database
-    and runs database migrations.
+    Lädt die Konfiguration, richtet Logging und UI ein, initialisiert die Datenbank
+    und führt Datenbankmigrationen durch.
 
-    :return: Tuple with UI, db session manager, file manager, and command-line arguments.
+    :return: Tuple mit UI, DB-Sitzungsmanager, Dateimanager und Kommandozeilenargumenten.
     """
     args = parse_arguments()
     config = load_config(args)

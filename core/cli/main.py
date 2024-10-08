@@ -13,20 +13,21 @@ from core.log import get_logger
 from core.state.state_manager import StateManager
 from core.telemetry import telemetry
 from core.ui.base import UIBase, UIClosedError, UserInput, pythagora_source
+from core.ui.translations import translate
 
 log = get_logger(__name__)
 
 
 async def run_project(sm: StateManager, ui: UIBase) -> bool:
     """
-    Work on the project.
+    Arbeitet am Projekt.
 
-    Starts the orchestrator agent with the newly loaded/created project
-    and runs it until the orchestrator decides to exit.
+    Startet den Orchestrator-Agenten mit dem neu geladenen/erstellten Projekt
+    und führt ihn aus, bis der Orchestrator beschließt, zu beenden.
 
-    :param sm: State manager.
-    :param ui: User interface.
-    :return: True if the orchestrator exited successfully, False otherwise.
+    :param sm: State Manager.
+    :param ui: Benutzeroberfläche.
+    :return: True, wenn der Orchestrator erfolgreich beendet wurde, False andernfalls.
     """
 
     telemetry.set("app_id", str(sm.project.id))
@@ -38,13 +39,13 @@ async def run_project(sm: StateManager, ui: UIBase) -> bool:
         success = await orca.run()
         telemetry.set("end_result", "success:exit" if success else "failure:api-error")
     except (KeyboardInterrupt, UIClosedError):
-        log.info("Interrupted by user")
+        log.info(translate("interrupted_by_user"))
         telemetry.set("end_result", "interrupt")
         await sm.rollback()
     except APIError as err:
         log.warning(f"LLM API error occurred: {err.message}")
         await ui.send_message(
-            f"Stopping Pythagora due to an error while calling the LLM API: {err.message}",
+            translate("stopping_pythagora_api_error", error=err.message),
             source=pythagora_source,
         )
         telemetry.set("end_result", "failure:api-error")
@@ -54,7 +55,7 @@ async def run_project(sm: StateManager, ui: UIBase) -> bool:
         stack_trace = telemetry.record_crash(err)
         await sm.rollback()
         await ui.send_message(
-            f"Stopping Pythagora due to error:\n\n{stack_trace}",
+            translate("stopping_pythagora_error", error=stack_trace),
             source=pythagora_source,
         )
 
@@ -63,10 +64,10 @@ async def run_project(sm: StateManager, ui: UIBase) -> bool:
 
 async def llm_api_check(ui: UIBase) -> bool:
     """
-    Check whether the configured LLMs are reachable in parallel.
+    Überprüft, ob die konfigurierten LLMs parallel erreichbar sind.
 
-    :param ui: UI we'll use to report any issues
-    :return: True if all the LLMs are reachable.
+    :param ui: UI, die wir verwenden, um eventuell auftretende Probleme zu melden
+    :return: True, wenn alle LLMs erreichbar sind.
     """
 
     config = get_config()
@@ -88,7 +89,7 @@ async def llm_api_check(ui: UIBase) -> bool:
             resp = await llm_client.api_check()
             if not resp:
                 await ui.send_message(
-                    f"API check for {llm_config.provider.value} {llm_config.model} failed.",
+                    translate("api_check_failed", provider=llm_config.provider.value, model=llm_config.model),
                     source=pythagora_source,
                 )
                 log.warning(f"API check for {llm_config.provider.value} {llm_config.model} failed.")
@@ -98,7 +99,7 @@ async def llm_api_check(ui: UIBase) -> bool:
                 return True
         except APIError as err:
             await ui.send_message(
-                f"API check for {llm_config.provider.value} {llm_config.model} failed with: {err}",
+                translate("api_check_failed_with_error", provider=llm_config.provider.value, model=llm_config.model, error=err),
                 source=pythagora_source,
             )
             log.warning(f"API check for {llm_config.provider.value} failed with: {err}")
@@ -119,16 +120,16 @@ async def llm_api_check(ui: UIBase) -> bool:
 
 async def start_new_project(sm: StateManager, ui: UIBase) -> bool:
     """
-    Start a new project.
+    Startet ein neues Projekt.
 
-    :param sm: State manager.
-    :param ui: User interface.
-    :return: True if the project was created successfully, False otherwise.
+    :param sm: State Manager.
+    :param ui: Benutzeroberfläche.
+    :return: True, wenn das Projekt erfolgreich erstellt wurde, False andernfalls.
     """
     while True:
         try:
             user_input = await ui.ask_question(
-                "What is the project name?",
+                translate("project_name_question"),
                 allow_empty=False,
                 source=pythagora_source,
             )
@@ -140,9 +141,9 @@ async def start_new_project(sm: StateManager, ui: UIBase) -> bool:
 
         project_name = user_input.text.strip()
         if not project_name:
-            await ui.send_message("Please choose a project name", source=pythagora_source)
+            await ui.send_message(translate("choose_project_name"), source=pythagora_source)
         elif len(project_name) > 100:
-            await ui.send_message("Please choose a shorter project name", source=pythagora_source)
+            await ui.send_message(translate("shorter_project_name"), source=pythagora_source)
         else:
             break
 
@@ -152,18 +153,18 @@ async def start_new_project(sm: StateManager, ui: UIBase) -> bool:
 
 async def run_pythagora_session(sm: StateManager, ui: UIBase, args: Namespace):
     """
-    Run a Pythagora session.
+    Führt eine Pythagora-Sitzung aus.
 
-    :param sm: State manager.
-    :param ui: User interface.
-    :param args: Command-line arguments.
-    :return: True if the application ran successfully, False otherwise.
+    :param sm: State Manager.
+    :param ui: Benutzeroberfläche.
+    :param args: Kommandozeilenargumente.
+    :return: True, wenn die Anwendung erfolgreich ausgeführt wurde, False andernfalls.
     """
 
     if not args.no_check:
         if not await llm_api_check(ui):
             await ui.send_message(
-                "Pythagora cannot start because the LLM API is not reachable.",
+                translate("llm_api_unreachable"),
                 source=pythagora_source,
             )
             return False
@@ -187,12 +188,12 @@ async def async_main(
     args: Namespace,
 ) -> bool:
     """
-    Main application coroutine.
+    Haupt-Anwendungskoroutine.
 
-    :param ui: User interface.
-    :param db: Database session manager.
-    :param args: Command-line arguments.
-    :return: True if the application ran successfully, False otherwise.
+    :param ui: Benutzeroberfläche.
+    :param db: Datenbank-Sitzungsmanager.
+    :param args: Kommandozeilenargumente.
+    :return: True, wenn die Anwendung erfolgreich ausgeführt wurde, False andernfalls.
     """
 
     if args.list:

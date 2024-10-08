@@ -152,15 +152,15 @@ class BaseAgent:
 
     def get_llm(self, name=None, stream_output=False) -> Callable:
         """
-        Get a new instance of the agent-specific LLM client.
+        Hole eine neue Instanz des agentenspezifischen LLM-Clients.
 
-        The client initializes the UI stream handler and stores the
-        request/response to the current state's log. The agent name
-        can be overridden in case the agent needs to use a different
-        model configuration.
+        Der Client initialisiert den UI-Stream-Handler und speichert die
+        Anfrage/Antwort im Log des aktuellen Zustands. Der Agentenname
+        kann überschrieben werden, falls der Agent eine andere
+        Modellkonfiguration benötigt.
 
-        :param name: Name of the agent for configuration (default: class name).
-        :return: LLM client for the agent.
+        :param name: Name des Agenten für die Konfiguration (Standard: Klassenname).
+        :return: LLM-Client für den Agenten.
         """
 
         if name is None:

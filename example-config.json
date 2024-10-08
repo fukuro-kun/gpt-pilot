@@ -1,23 +1,23 @@
 {
-  // Configuration for the LLM providers that can be used. Pythagora supports
-  // OpenAI, Azure, Anthropic and Groq. OpenRouter and local LLMs (such as LM-Studio)
-  // also work, you can use "openai" provider to define these.
+  // Konfiguration für die verwendbaren LLM-Anbieter. Pythagora unterstützt
+  // OpenAI, Azure, Anthropic und Groq. OpenRouter und lokale LLMs (wie LM-Studio)
+  // funktionieren ebenfalls, Sie können den "openai"-Anbieter verwenden, um diese zu definieren.
   "llm": {
     "openai": {
-      // Base url to the provider/server, omitting the trailing "chat/completions" part.
+      // Basis-URL zum Anbieter/Server, ohne den abschließenden "chat/completions"-Teil.
       "base_url": null,
       "api_key": null,
       "connect_timeout": 60.0,
       "read_timeout": 20.0
     },
-    // Example config for Anthropic (see https://docs.anthropic.com/docs/api-reference)
+    // Beispielkonfiguration für Anthropic (siehe https://docs.anthropic.com/docs/api-reference)
     "anthropic": {
       "base_url": "https://api.anthropic.com",
       "api_key": "your-api-key",
       "connect_timeout": 60.0,
       "read_timeout": 20.0
     },
-    // Example config for Azure OpenAI (see https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#chat-completions)
+    // Beispielkonfiguration für Azure OpenAI (siehe https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#chat-completions)
     "azure": {
       "base_url": "https://your-resource-name.openai.azure.com/",
       "api_key": "your-api-key",
@@ -29,9 +29,9 @@
       }
     }
   },
-  // Each agent can use a different model or configuration. The default, as before, is GPT4 Turbo
-  // for most tasks and GPT3.5 Turbo to generate file descriptions. The agent name here should match
-  // the Python class name.
+  // Jeder Agent kann ein anderes Modell oder eine andere Konfiguration verwenden. Der Standard ist wie zuvor GPT4 Turbo
+  // für die meisten Aufgaben und GPT3.5 Turbo zur Generierung von Dateibeschreibungen. Der Agent-Name hier sollte mit
+  // dem Python-Klassennamen übereinstimmen.
   "agent": {
     "default": {
       "provider": "openai",
@@ -39,15 +39,15 @@
       "temperature": 0.5
     }
   },
-  // Logging configuration outputs debug log to "pythagora.log" by default. If you set this to null,
-  // the log will be sent to stdout.
+  // Logging-Konfiguration gibt standardmäßig Debug-Log in "pythagora.log" aus. Wenn Sie dies auf null setzen,
+  // wird das Log an stdout gesendet.
   "log": {
     "level": "DEBUG",
     "format": "%(asctime)s %(levelname)s [%(name)s] %(message)s",
     "output": "pythagora.log"
   },
-  // Database to use. Pythagora uses asyncio so asyncio-compatible database engine should be specified.
-  // If "debug_sql" is set to True, all SQL queries will be logged.
+  // Zu verwendende Datenbank. Pythagora verwendet asyncio, daher sollte eine asyncio-kompatible Datenbank-Engine angegeben werden.
+  // Wenn "debug_sql" auf True gesetzt ist, werden alle SQL-Abfragen protokolliert.
   "db": {
     "url": "sqlite+aiosqlite:///pythagora.db",
     "debug_sql": false
@@ -57,10 +57,10 @@
   },
   "fs": {
     "type": "local",
-    // Root directory of the workspace. Pythagora will store all projects under this directory by default.
+    // Stammverzeichnis des Arbeitsbereichs. Pythagora speichert standardmäßig alle Projekte in diesem Verzeichnis.
     "workspace_root": "workspace",
-    // Directories, files and patterns to ignore when examining the files in the project.
-    // Note that Pythagora already ignores all binary (non-text) files by default.
+    // Verzeichnisse, Dateien und Muster, die bei der Untersuchung der Dateien im Projekt ignoriert werden sollen.
+    // Beachten Sie, dass Pythagora bereits alle binären (nicht-text) Dateien standardmäßig ignoriert.
     "ignore_paths": [
       ".git",
       ".gpt-pilot",
@@ -83,7 +83,11 @@
       "*.log",
       "go.sum"
     ],
-    // Files larger than 50KB will be ignored, even if they otherwise wouldn't be.
+    // Dateien, die größer als 50 KB sind, werden ignoriert, auch wenn sie sonst nicht ignoriert würden.
     "ignore_size_threshold": 50000
+  },
+  // Telemetrie-Einstellungen
+  "telemetry": {
+    "enabled": false
   }
 }

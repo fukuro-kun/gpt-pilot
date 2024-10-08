@@ -1,3 +1,4 @@
+from core.ui.translations import translate
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
@@ -18,7 +19,7 @@ log = get_logger(__name__)
 
 
 class Epic(BaseModel):
-    description: str = Field(description=("Description of an epic."))
+    description: str = Field(description="Description of an epic.")
 
 
 class Task(BaseModel):
@@ -36,9 +37,14 @@ class EpicPlan(BaseModel):
 
 class TechLead(BaseAgent):
     agent_type = "tech-lead"
-    display_name = "Tech Lead"
+    display_name = translate("tech_lead_display_name")
 
     async def run(self) -> AgentResponse:
+        """
+        Runs the TechLead agent.
+
+        :return: AgentResponse
+        """
         if len(self.current_state.epics) == 0:
             if self.current_state.specification.example_project:
                 self.plan_example_project()
@@ -74,6 +80,9 @@ class TechLead(BaseAgent):
             return await self.ask_for_new_feature()
 
     def create_initial_project_epic(self):
+        """
+        Creates the initial project epic.
+        """
         log.debug("Creating initial project Epic")
         self.next_state.epics = [
             {
@@ -90,10 +99,13 @@ class TechLead(BaseAgent):
         ]
 
     async def apply_project_templates(self):
+        """
+        Applies project templates.
+        """
         state = self.current_state
         summaries = []
 
-        # Only do this for the initial project and if the templates are specified
+        # Only for the initial project and if templates are specified
         if len(state.epics) != 1 or not state.specification.templates:
             return
 
@@ -111,7 +123,7 @@ class TechLead(BaseAgent):
 
             description = template.description
             log.info(f"Applying project template: {template.name}")
-            await self.send_message(f"Applying project template {description} ...")
+            await self.send_message(translate("applying_project_template_message", description=description))
             summary = await template.apply()
             summaries.append(summary)
 
@@ -125,23 +137,28 @@ class TechLead(BaseAgent):
             self.next_state.specification = spec
 
     async def ask_for_new_feature(self) -> AgentResponse:
+        """
+        Asks for a new feature.
+
+        :return: AgentResponse
+        """
         if len(self.current_state.epics) > 2:
-            await self.ui.send_message("Your new feature is complete!", source=success_source)
+            await self.ui.send_message(translate("new_feature_complete"), source=success_source)
         else:
-            await self.ui.send_message("Your app is DONE! You can start using it right now!", source=success_source)
+            await self.ui.send_message(translate("app_done"), source=success_source)
 
         if self.current_state.run_command:
             await self.ui.send_run_command(self.current_state.run_command)
 
         log.debug("Asking for new feature")
         response = await self.ask_question(
-            "Do you have a new feature to add to the project? Just write it here:",
-            buttons={"continue": "continue", "end": "No, I'm done"},
+            translate("new_feature_question"),
+            buttons={"continue": translate("continue_button"), "end": translate("no_more_features")},
             allow_empty=False,
         )
 
         if response.button == "end" or response.cancelled or not response.text:
-            await self.ui.send_message("Thanks for using Pythagora!")
+            await self.ui.send_message(translate("thanks_for_using"))
             return AgentResponse.exit(self)
 
         self.next_state.epics = self.current_state.epics + [
@@ -162,8 +179,14 @@ class TechLead(BaseAgent):
         return AgentResponse.update_specification(self, response.text)
 
     async def plan_epic(self, epic) -> AgentResponse:
+        """
+        Plans an epic.
+
+        :param epic: The epic to plan
+        :return: AgentResponse
+        """
         log.debug(f"Planning tasks for the epic: {epic['name']}")
-        await self.send_message("Creating the development plan ...")
+        await self.send_message(translate("creating_development_plan"))
 
         llm = self.get_llm(TECH_LEAD_PLANNING)
         convo = (
@@ -187,14 +210,14 @@ class TechLead(BaseAgent):
         llm = self.get_llm(TECH_LEAD_PLANNING)
 
         if epic.get("source") == "feature" or epic.get("complexity") == "simple":
-            await self.send_message(f"Epic 1: {epic['name']}")
+            await self.send_message(translate("epic_number_description", number=1, description=epic['name']))
             self.next_state.current_epic["sub_epics"] = [
                 {
                     "id": 1,
                     "description": epic["name"],
                 }
             ]
-            await self.send_message("Creating tasks for this epic ...")
+            await self.send_message(translate("creating_tasks_for_epic"))
             self.next_state.tasks = self.next_state.tasks + [
                 {
                     "id": uuid4().hex,
@@ -219,11 +242,11 @@ class TechLead(BaseAgent):
                 for sub_epic_number, sub_epic in enumerate(response.plan, start=1)
             ]
             for sub_epic_number, sub_epic in enumerate(response.plan, start=1):
-                await self.send_message(f"Epic {sub_epic_number}: {sub_epic.description}")
+                await self.send_message(translate("epic_number_description", number=sub_epic_number, description=sub_epic.description))
                 convo = convo.template(
                     "epic_breakdown", epic_number=sub_epic_number, epic_description=sub_epic.description
                 ).require_schema(EpicPlan)
-                await self.send_message("Creating tasks for this epic ...")
+                await self.send_message(translate("creating_tasks_for_epic"))
                 epic_plan: EpicPlan = await llm(convo, parser=JSONParser(EpicPlan))
                 self.next_state.tasks = self.next_state.tasks + [
                     {
@@ -253,6 +276,9 @@ class TechLead(BaseAgent):
         return AgentResponse.done(self)
 
     def plan_example_project(self):
+        """
+        Plans an example project.
+        """
         example_name = self.current_state.specification.example_project
         log.debug(f"Planning example project: {example_name}")
 

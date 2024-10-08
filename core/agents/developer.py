@@ -15,6 +15,7 @@ from core.db.models.specification import Complexity
 from core.llm.parser import JSONParser
 from core.log import get_logger
 from core.telemetry import telemetry
+from core.ui.translations import translate
 
 log = get_logger(__name__)
 
@@ -62,7 +63,7 @@ class TaskSteps(BaseModel):
 
 class Developer(RelevantFilesMixin, BaseAgent):
     agent_type = "developer"
-    display_name = "Developer"
+    display_name = translate("developer_display_name")
 
     async def run(self) -> AgentResponse:
         if not self.current_state.unfinished_tasks:
@@ -121,7 +122,7 @@ class Developer(RelevantFilesMixin, BaseAgent):
         if self.current_state.files and self.current_state.relevant_files is None:
             return await self.get_relevant_files(user_feedback, description)
 
-        await self.send_message("Breaking down the task into steps ...")
+        await self.send_message(translate("breaking_down_task"))
         await self.ui.send_task_progress(
             n_tasks,  # iterations and reviews can be created only one at a time, so we are always on last one
             n_tasks,
@@ -200,7 +201,7 @@ class Developer(RelevantFilesMixin, BaseAgent):
 
         current_task_index = self.current_state.tasks.index(current_task)
 
-        await self.send_message("Thinking about how to implement this task ...")
+        await self.send_message(translate("thinking_about_implementation"))
 
         llm = self.get_llm(TASK_BREAKDOWN_AGENT_NAME, stream_output=True)
         convo = AgentConvo(self).template(
@@ -221,7 +222,7 @@ class Developer(RelevantFilesMixin, BaseAgent):
         self.next_state.flag_tasks_as_modified()
 
         llm = self.get_llm(PARSE_TASK_AGENT_NAME)
-        await self.send_message("Breaking down the task into steps ...")
+        await self.send_message(translate("breaking_down_task"))
         convo.assistant(response).template("parse_task").require_schema(TaskSteps)
         response: TaskSteps = await llm(convo, parser=JSONParser(TaskSteps), temperature=0)
 
@@ -284,14 +285,14 @@ class Developer(RelevantFilesMixin, BaseAgent):
 
         :return: True if the task should be executed as is, False if the task is skipped or edited
         """
-        buttons = {"yes": "Yes", "edit": "Edit Task"}
+        buttons = {"yes": translate("yes"), "edit": translate("edit_task")}
         if len(self.current_state.tasks) > 1:
-            buttons["skip"] = "Skip Task"
+            buttons["skip"] = translate("skip_task")
 
         description = self.current_state.current_task["description"]
-        await self.send_message("Starting new task with description:\n\n" + description)
+        await self.send_message(translate("starting_new_task") + "\n\n" + description)
         user_response = await self.ask_question(
-            "Do you want to execute the above task?",
+            translate("execute_task_question"),
             buttons=buttons,
             default="yes",
             buttons_only=True,
@@ -305,16 +306,16 @@ class Developer(RelevantFilesMixin, BaseAgent):
             log.info(f"Skipping task: {description}")
             self.next_state.current_task["instructions"] = "(skipped on user request)"
             self.next_state.set_current_task_status(TaskStatus.SKIPPED)
-            await self.send_message("Skipping task...")
+            await self.send_message(translate("skipping_task"))
             # We're done here, and will pick up the next task (if any) on the next run
             return False
 
         user_response = await self.ask_question(
-            "Edit the task description:",
+            translate("edit_task_description"),
             buttons={
                 # FIXME: must be lowercase becase VSCode doesn't recognize it otherwise. Needs a fix in the extension
-                "continue": "continue",
-                "cancel": "Cancel",
+                "continue": translate("continue"),
+                "cancel": translate("cancel"),
             },
             default="continue",
             initial_text=description,

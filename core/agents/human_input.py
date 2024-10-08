@@ -1,10 +1,11 @@
 from core.agents.base import BaseAgent
 from core.agents.response import AgentResponse, ResponseType
+from core.ui.translations import translate
 
 
 class HumanInput(BaseAgent):
     agent_type = "human-input"
-    display_name = "Human Input"
+    display_name = translate("human_input_display_name")
 
     async def run(self) -> AgentResponse:
         if self.prev_response and self.prev_response.type == ResponseType.INPUT_REQUIRED:
@@ -16,8 +17,8 @@ class HumanInput(BaseAgent):
         description = step["human_intervention_description"]
 
         await self.ask_question(
-            f"I need human intervention: {description}",
-            buttons={"continue": "Continue"},
+            translate("human_intervention_needed", description=description),
+            buttons={"continue": translate("continue_button")},
             default="continue",
             buttons_only=True,
         )
@@ -35,11 +36,11 @@ class HumanInput(BaseAgent):
             # figure out where its local files are and how to open it.
             full_path = self.state_manager.file_system.get_full_path(file)
 
-            await self.send_message(f"Input required on {file}:{line}")
+            await self.send_message(translate("input_required_at", file=file, line=line))
             await self.ui.open_editor(full_path, line)
             await self.ask_question(
-                f"Please open {file} and modify line {line} according to the instructions.",
-                buttons={"continue": "Continue"},
+                translate("modify_file_instructions", file=file, line=line),
+                buttons={"continue": translate("continue_button")},
                 default="continue",
                 buttons_only=True,
             )

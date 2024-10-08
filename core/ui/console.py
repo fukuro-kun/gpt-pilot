@@ -1,9 +1,13 @@
-from typing import Optional
+# core/ui/console.py
+from typing import Optional, List, Dict
+import random
 
 from prompt_toolkit.shortcuts import PromptSession
 
 from core.log import get_logger
-from core.ui.base import ProjectStage, UIBase, UIClosedError, UISource, UserInput
+from core.ui.base import ProjectStage, UIBase, UIClosedError, UISource, UserInput, empty_list
+from core.ui.translations import translate
+from core.config.magic_words import get_thinking_logs
 
 log = get_logger(__name__)
 
@@ -71,13 +75,13 @@ class PlainConsoleUI(UIBase):
         project_state_id: Optional[str] = None,
     ) -> UserInput:
         if source:
-            print(f"[{source}] {question}")
+            print(f"[{source}] {translate(question)}")
         else:
-            print(f"{question}")
+            print(f"{translate(question)}")
 
         if buttons:
             for k, v in buttons.items():
-                default_str = " (default)" if k == default else ""
+                default_str = " (Standard)" if k == default else ""
                 print(f"  [{k}]: {v}{default_str}")
 
         session = PromptSession("> ")
@@ -93,19 +97,19 @@ class PlainConsoleUI(UIBase):
             if buttons and choice in buttons:
                 return UserInput(button=choice, text=None)
             if buttons_only:
-                print("Please choose one of available options")
+                print(translate("please_choose_option"))
                 continue
             if choice or allow_empty:
                 return UserInput(button=None, text=choice)
-            print("Please provide a valid input")
+            print(translate("provide_valid_input"))
 
     async def send_project_stage(self, stage: ProjectStage):
         pass
 
     async def send_epics_and_tasks(
         self,
-        epics: list[dict],
-        tasks: list[dict],
+        epics: List[Dict] = empty_list(),
+        tasks: List[Dict] = empty_list(),
     ):
         pass
 
@@ -117,7 +121,7 @@ class PlainConsoleUI(UIBase):
         source: str,
         status: str,
         source_index: int = 1,
-        tasks: list[dict] = None,
+        tasks: List[Dict] = empty_list(),
     ):
         pass
 
@@ -132,7 +136,7 @@ class PlainConsoleUI(UIBase):
 
     async def send_modified_files(
         self,
-        modified_files: dict[str, str, str],
+        modified_files: List[Dict[str, str]],
     ):
         pass
 
@@ -186,8 +190,10 @@ class PlainConsoleUI(UIBase):
     async def import_project(self, project_dir: str):
         pass
 
-    async def start_important_stream(self):
-        pass
+    async def start_important_stream(self, path: str):
+        thinking_logs = get_thinking_logs()
+        thinking_message = random.choice(thinking_logs)
+        print(thinking_message)
 
 
 __all__ = ["PlainConsoleUI"]

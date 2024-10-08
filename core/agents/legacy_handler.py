@@ -1,10 +1,11 @@
 from core.agents.base import BaseAgent
 from core.agents.response import AgentResponse
+from core.ui.translations import translate
 
 
 class LegacyHandler(BaseAgent):
     agent_type = "legacy-handler"
-    display_name = "Legacy Handler"
+    display_name = translate("legacy_handler_display_name")
 
     async def run(self) -> AgentResponse:
         if self.data["type"] == "review_task":

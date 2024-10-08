@@ -8,227 +8,167 @@
 
 <div align="center">
 
-[![Discord Follow](https://dcbadge.vercel.app/api/server/HaqXugmxr9?style=flat)](https://discord.gg/HaqXugmxr9)
-[![GitHub Repo stars](https://img.shields.io/github/stars/Pythagora-io/gpt-pilot?style=social)](https://github.com/Pythagora-io/gpt-pilot)
-[![Twitter Follow](https://img.shields.io/twitter/follow/HiPythagora?style=social)](https://twitter.com/HiPythagora)
+### GPT Pilot generiert nicht nur Code, es baut Anwendungen!
 
 </div>
 
 ---
 
-<div align="center">
-<a href="https://www.ycombinator.com/" target="_blank"><img src="https://s3.amazonaws.com/assets.pythagora.ai/yc/PNG/Black.png" alt="Pythagora-io%2Fgpt-pilot | Trendshift" style="width: 250px; height: 93px;"/></a>
-</div>
-<br>
-<div align="center">
-<a href="https://trendshift.io/repositories/466" target="_blank"><img src="https://trendshift.io/api/badge/repositories/466" alt="Pythagora-io%2Fgpt-pilot | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
-</div>
+<!-- Inhaltsverzeichnis -->
+* [🔌 Anforderungen](#-anforderungen)
+* [🚦Wie starte ich mit gpt-pilot?](#wie-starte-ich-mit-gpt-pilot)
+* [🌐 Sprachunterstützung](#-sprachunterstützung)
+* [🔎 Beispiele](#-beispiele)
+* [🐳 Wie starte ich gpt-pilot in Docker?](#-wie-starte-ich-gpt-pilot-in-docker)
+* [🧑‍💻️ CLI-Argumente](#-cli-argumente)
+* [🏗 Wie funktioniert GPT Pilot?](#-wie-funktioniert-gpt-pilot)
+* [📄 Lizenz und Ursprung](#-lizenz-und-ursprung)
+<!-- Inhaltsverzeichnis -->
 
-<br>
-<br>
-
-<div align="center">
-
-### GPT Pilot doesn't just generate code, it builds apps!
-
-</div>
-
----
-<div align="center">
-
-[![See it in action](https://i3.ytimg.com/vi/4g-1cPGK0GA/maxresdefault.jpg)](https://youtu.be/4g-1cPGK0GA)
-
-(click to open the video in YouTube) (1:40min)
-
-</div>
-
----
-
-📫 If you would like to get updates on future releases or just get in touch, join our [Discord server](https://discord.gg/HaqXugmxr9) or you [can add your email here](http://eepurl.com/iD6Mpo). 📬
-
----
-
-<!-- TOC -->
-* [🔌 Requirements](#-requirements)
-* [🚦How to start using gpt-pilot?](#how-to-start-using-gpt-pilot)
-* [🔎 Examples](#-examples)
-* [🐳 How to start gpt-pilot in docker?](#-how-to-start-gpt-pilot-in-docker)
-* [🧑‍💻️ CLI arguments](#-cli-arguments)
-* [🏗 How GPT Pilot works?](#-how-gpt-pilot-works)
-* [🕴How's GPT Pilot different from _Smol developer_ and _GPT engineer_?](#hows-gpt-pilot-different-from-smol-developer-and-gpt-engineer)
-* [🍻 Contributing](#-contributing)
-* [🔗 Connect with us](#-connect-with-us)
-* [🌟 Star history](#-star-history)
-<!-- TOC -->
-
----
-
-GPT Pilot aims to research how much LLMs can be utilized to generate fully working, production-ready apps while the developer oversees the implementation.
-
-**The main idea is that AI can write most of the code for an app (maybe 95%), but for the rest, 5%, a developer is and will be needed until we get full AGI**.
-
-If you are interested in our learnings during this project, you can check [our latest blog posts](https://blog.pythagora.ai/2024/02/19/gpt-pilot-what-did-we-learn-in-6-months-of-working-on-a-codegen-pair-programmer/).
-
----
-
-<br>
-
-<div align="center">
-
-### **[👉 Examples of apps written by GPT Pilot 👈](https://github.com/Pythagora-io/gpt-pilot/wiki/Apps-created-with-GPT-Pilot)**
-
-</div>
-<br>
-
----
-
-# 🔌 Requirements
+# 🔌 Anforderungen
 
 - **Python 3.9+**
 
-# 🚦How to start using gpt-pilot?
+# 🚦Wie starte ich mit gpt-pilot?
 
-### If you're new to GPT Pilot:
+### Wenn Sie neu bei GPT Pilot sind:
 
-After you have Python and (optionally) PostgreSQL installed, follow these steps:
+Nachdem Sie Python und (optional) PostgreSQL installiert haben, folgen Sie diesen Schritten:
 
-1. `git clone https://github.com/Pythagora-io/gpt-pilot.git` (clone the repo)
-2. `cd gpt-pilot` (go to the repo folder)
-3. `python3 -m venv venv` (create a virtual environment)
-4. `source venv/bin/activate` (or on Windows `venv\Scripts\activate`) (activate the virtual environment)
-5. `pip install -r requirements.txt` (install the dependencies)
-6. `cp example-config.json config.json` (create `config.json` file)
-7. Set your key and other settings in `config.json` file:
-   - LLM Provider (`openai`, `anthropic` or `groq`) key and endpoints (leave `null` for default) (note that Azure and OpenRouter are suppored via the `openai` setting)
-   - Your API key (if `null`, will be read from the environment variables)
-   - database settings: sqlite is used by default, PostgreSQL should also work
-   - optionally update `fs.ignore_paths` and add files or folders which shouldn't be tracked by GPT Pilot in workspace, useful to ignore folders created by compilers
-8. `python main.py` (start GPT Pilot)
+1. `git clone https://github.com/fukuro-kun/gpt-pilot.git` (Repository klonen)
+2. `cd gpt-pilot` (in den Repository-Ordner wechseln)
+3. Virtuelle Umgebung erstellen:
+   - Mit venv:
+     `python3 -m venv venv`
+   - Mit conda:
+     `conda create --name gpt-pilot python=3.9`
 
-All generated code will be stored in the folder `workspace` inside the folder named after the app name you enter upon starting the pilot.
+4. Virtuelle Umgebung aktivieren:
+   - Mit venv:
+     - Unix/macOS: `source venv/bin/activate`
+     - Windows: `venv\Scripts\activate`
+   - Mit conda:
+     `conda activate gpt-pilot`
+5. `pip install -r requirements.txt` (Abhängigkeiten installieren)
+6. `cp example-config.json config.json` (`config.json` Datei erstellen)
+7. Setzen Sie Ihren Schlüssel und andere Einstellungen in der `config.json` Datei:
+   - LLM-Anbieter (`openai`, `anthropic` oder `groq`) Schlüssel und Endpunkte (lassen Sie `null` für Standard) (beachten Sie, dass Azure und OpenRouter über die `openai`-Einstellung unterstützt werden)
+   - Ihr API-Schlüssel (wenn `null`, wird er aus den Umgebungsvariablen gelesen)
+   - Datenbankeinstellungen: standardmäßig wird sqlite verwendet, PostgreSQL sollte auch funktionieren
+   - Optional aktualisieren Sie `fs.ignore_paths` und fügen Sie Dateien oder Ordner hinzu, die von GPT Pilot im Arbeitsbereich nicht verfolgt werden sollen, nützlich um von Compilern erstellte Ordner zu ignorieren
+8. `python main.py` (GPT Pilot starten)
 
-### If you're upgrading from GPT Pilot v0.1
+Aller generierter Code wird im Ordner `workspace` innerhalb des Ordners gespeichert, der nach dem App-Namen benannt ist, den Sie beim Starten des Piloten eingeben.
 
-Assuming you already have the git repository with an earlier version:
+# 🌐 Sprachunterstützung
 
-1. `git pull` (update the repo)
-2. `source pilot-env/bin/activate` (or on Windows `pilot-env\Scripts\activate`) (activate the virtual environment)
-3. `pip install -r requirements.txt` (install the new dependencies)
-4. `python main.py --import-v0 pilot/gpt-pilot` (this should import your settings and existing projects)
+GPT Pilot unterstützt jetzt mehrere Sprachen für die Benutzeroberfläche, mit einem Fokus auf Deutsch und Englisch.
 
-This will create a new database `pythagora.db` and import all apps from the old database. For each app,
-it will import the start of the latest task you were working on.
+### Spracheinstellung
 
-To verify that the import was successful, you can run `python main.py --list` to see all the apps you have created,
-and check `config.json` to check the settings were correctly converted to the new config file format (and make
-any adjustments if needed).
+Die Sprache kann in der `config.json` Datei festgelegt werden:
 
-# 🔎 [Examples](https://github.com/Pythagora-io/gpt-pilot/wiki/Apps-created-with-GPT-Pilot)
+```json
+{
+  "language": "de",
+  ...
+}
+```
 
-[Click here](https://github.com/Pythagora-io/gpt-pilot/wiki/Apps-created-with-GPT-Pilot) to see all example apps created with GPT Pilot.
+Unterstützte Sprachcodes:
+- `"de"` für Deutsch
+- `"en"` für Englisch
 
-## 🐳 How to start gpt-pilot in docker?
-1. `git clone https://github.com/Pythagora-io/gpt-pilot.git` (clone the repo)
-2. Update the `docker-compose.yml` environment variables, which can be done via `docker compose config`. If you wish to use a local model, please go to [https://localai.io/basics/getting_started/](https://localai.io/basics/getting_started/).
-3. By default, GPT Pilot will read & write to `~/gpt-pilot-workspace` on your machine, you can also edit this in `docker-compose.yml`
-4. run `docker compose build`. this will build a gpt-pilot container for you.
-5. run `docker compose up`.
-6. access the web terminal on `port 7681`
-7. `python main.py` (start GPT Pilot)
+Wenn keine Sprache angegeben ist oder eine nicht unterstützte Sprache gewählt wurde, fällt das System auf Deutsch zurück.
 
-This will start two containers, one being a new image built by the `Dockerfile` and a Postgres database. The new image also has [ttyd](https://github.com/tsl0922/ttyd) installed so that you can easily interact with gpt-pilot. Node is also installed on the image and port 3000 is exposed.
+### Wichtige Hinweise zur Mehrsprachigkeit
 
-### PostgreSQL support
+- Die Benutzeroberfläche und Systemmeldungen werden in der gewählten Sprache angezeigt.
+- Die interne Kommunikation und Code-Generierung erfolgen weiterhin auf Englisch, um die Kompatibilität und Effizienz zu gewährleisten.
+- Dynamisch generierte Inhalte (z.B. LLM-Ausgaben) bleiben unübersetzt.
 
-GPT Pilot uses built-in SQLite database by default. If you want to use the PostgreSQL database, you need to additional install `asyncpg` and `psycopg2` packages:
+Wir arbeiten kontinuierlich daran, die Sprachunterstützung zu verbessern und weitere Sprachen hinzuzufügen. Feedback und Beiträge zur Verbesserung der Übersetzungen sind willkommen!
+
+# 🔎 Beispiele
+
+[Klicken Sie hier](https://github.com/Pythagora-io/gpt-pilot/wiki/Apps-created-with-GPT-Pilot), um Beispiel-Apps zu sehen, die mit GPT Pilot erstellt wurden.
+
+# 🐳 Wie starte ich gpt-pilot in Docker?
+1. `git clone https://github.com/fukuro-kun/gpt-pilot.git` (Repository klonen)
+2. Aktualisieren Sie die Umgebungsvariablen in `docker-compose.yml`, was über `docker compose config` erfolgen kann. Wenn Sie ein lokales Modell verwenden möchten, gehen Sie bitte zu [https://localai.io/basics/getting_started/](https://localai.io/basics/getting_started/).
+3. Standardmäßig liest und schreibt GPT Pilot in `~/gpt-pilot-workspace` auf Ihrem Gerät, Sie können dies auch in `docker-compose.yml` bearbeiten
+4. Führen Sie `docker compose build` aus. Dies wird einen gpt-pilot Container für Sie erstellen.
+5. Führen Sie `docker compose up` aus.
+6. Greifen Sie auf das Web-Terminal auf `Port 7681` zu
+7. `python main.py` (GPT Pilot starten)
+
+Dies startet zwei Container, einen als neues Image, das von der `Dockerfile` erstellt wurde, und eine Postgres-Datenbank. Das neue Image hat auch [ttyd](https://github.com/tsl0922/ttyd) installiert, sodass Sie einfach mit gpt-pilot interagieren können. Node ist ebenfalls auf dem Image installiert und Port 3000 ist freigegeben.
+
+### PostgreSQL-Unterstützung
+
+GPT Pilot verwendet standardmäßig die eingebaute SQLite-Datenbank. Wenn Sie die PostgreSQL-Datenbank verwenden möchten, müssen Sie zusätzlich die Pakete `asyncpg` und `psycopg2` installieren:
 
 ```bash
 pip install asyncpg psycopg2
 ```
 
-Then, you need to update the `config.json` file to set `db.url` to `postgresql+asyncpg://<user>:<password>@<db-host>/<db-name>`.
+Dann müssen Sie die `config.json` Datei aktualisieren, um `db.url` auf `postgresql+asyncpg://<benutzer>:<passwort>@<db-host>/<db-name>` zu setzen.
 
-# 🧑‍💻️ CLI arguments
+# 🧑‍💻️ CLI-Argumente
 
-### List created projects (apps)
+### Erstellte Projekte (Apps) auflisten
 
 ```bash
 python main.py --list
 ```
 
-Note: for each project (app), this also lists "branches". Currently we only support having one branch (called "main"), and in the future we plan to add support for multiple project branches.
-
-### Load and continue from the latest step in a project (app)
+### Laden und Fortfahren vom letzten Schritt in einem Projekt (App)
 
 ```bash
 python main.py --project <app_id>
 ```
 
-### Load and continue from a specific step in a project (app)
+### Laden und Fortfahren von einem bestimmten Schritt in einem Projekt (App)
 
 ```bash
-python main.py --project <app_id> --step <step>
+python main.py --project <app_id> --step < step >
 ```
 
-Warning: this will delete all progress after the specified step!
+Warnung: Dies löscht den gesamten Fortschritt nach dem angegebenen Schritt!
 
-### Delete project (app)
+### Projekt (App) löschen
 
 ```bash
 python main.py --delete <app_id>
 ```
 
-Delete project with the specified `app_id`. Warning: this cannot be undone!
+Löscht das Projekt mit der angegebenen `app_id`. Warnung: Dies kann nicht rückgängig gemacht werden!
 
-### Import projects from v0.1
+### Andere Befehlszeilenoptionen
 
-```bash
-python main.py --import-v0 <path>
-```
-
-This will import projects from the old GPT Pilot v0.1 database. The path should be the path to the old GPT Pilot v0.1 database. For each project, it will import the start of the latest task you were working on. If the project was already imported, the import procedure will skip it (won't overwrite the project in the database).
-
-### Other command-line options
-
-There are several other command-line options that mostly support calling GPT Pilot from our VSCode extension. To see all the available options, use the `--help` flag:
+Es gibt mehrere andere Befehlszeilenoptionen. Um alle verfügbaren Optionen zu sehen, verwenden Sie das Flag `--help`:
 
 ```bash
 python main.py --help
 ```
 
-# 🏗 How GPT Pilot works?
-Here are the steps GPT Pilot takes to create an app:
+# 🏗 Wie funktioniert GPT Pilot?
+Hier sind die Schritte, die GPT Pilot unternimmt, um eine App zu erstellen:
 
-1. You enter the app name and the description.
-2. **Product Owner agent** like in real life, does nothing. :)
-3. **Specification Writer agent** asks a couple of questions to understand the requirements better if project description is not good enough.
-4. **Architect agent** writes up technologies that will be used for the app and checks if all technologies are installed on the machine and installs them if not.
-5. **Tech Lead agent** writes up development tasks that the Developer must implement.
-6. **Developer agent** takes each task and writes up what needs to be done to implement it. The description is in human-readable form.
-7. **Code Monkey agent** takes the Developer's description and the existing file and implements the changes.
-8. **Reviewer agent** reviews every step of the task and if something is done wrong Reviewer sends it back to Code Monkey.
-9. **Troubleshooter agent** helps you to give good feedback to GPT Pilot when something is wrong.
-10. **Debugger agent** hate to see him, but he is your best friend when things go south.
-11. **Technical Writer agent** writes documentation for the project.
+1. Sie geben den App-Namen und die Beschreibung ein.
+2. **Product Owner Agent** macht wie im echten Leben nichts. :)
+3. **Specification Writer Agent** stellt ein paar Fragen, um die Anforderungen besser zu verstehen, wenn die Projektbeschreibung nicht gut genug ist.
+4. **Architect Agent** schreibt die Technologien auf, die für die App verwendet werden, und prüft, ob alle Technologien auf der Maschine installiert sind, und installiert sie, wenn nicht.
+5. **Tech Lead Agent** schreibt Entwicklungsaufgaben auf, die der Entwickler implementieren muss.
+6. **Developer Agent** nimmt jede Aufgabe und beschreibt, was getan werden muss, um sie zu implementieren. Die Beschreibung ist in menschenlesbarer Form.
+7. **Code Monkey Agent** nimmt die Beschreibung des Entwicklers und die vorhandene Datei und implementiert die Änderungen.
+8. **Reviewer Agent** überprüft jeden Schritt der Aufgabe und wenn etwas falsch gemacht wurde, sendet der Reviewer es zurück zum Code Monkey.
+9. **Troubleshooter Agent** hilft Ihnen, GPT Pilot gutes Feedback zu geben, wenn etwas falsch ist.
+10. **Debugger Agent** man sieht ihn ungern, aber er ist Ihr bester Freund, wenn die Dinge schief gehen.
+11. **Technical Writer Agent** schreibt die Dokumentation für das Projekt.
 
-<br>
+# 📄 Lizenz und Ursprung
 
-# 🕴How's GPT Pilot different from _Smol developer_ and _GPT engineer_?
+Dieses Projekt ist ein Fork des ursprünglichen [GPT Pilot Projekts](https://github.com/Pythagora-io/gpt-pilot) und wird unter der Functional Source License, Version 1.1, MIT Future License (FSL-1.1-MIT) lizenziert.
 
-- **GPT Pilot works with the developer to create a fully working production-ready app** - I don't think AI can (at least in the near future) create apps without a developer being involved. So, **GPT Pilot codes the app step by step** just like a developer would in real life. This way, it can debug issues as they arise throughout the development process. If it gets stuck, you, the developer in charge, can review the code and fix the issue. Other similar tools give you the entire codebase at once - this way, bugs are much harder to fix for AI and for you as a developer.
-  <br><br>
-- **Works at scale** - GPT Pilot isn't meant to create simple apps but rather so it can work at any scale. It has mechanisms that filter out the code, so in each LLM conversation, it doesn't need to store the entire codebase in context, but it shows the LLM only the relevant code for the current task it's working on. Once an app is finished, you can continue working on it by writing instructions on what feature you want to add.
-
-# 🍻 Contributing
-If you are interested in contributing to GPT Pilot, join [our Discord server](https://discord.gg/HaqXugmxr9), check out open [GitHub issues](https://github.com/Pythagora-io/gpt-pilot/issues), and see if anything interests you. We would be happy to get help in resolving any of those. The best place to start is by reviewing blog posts mentioned above to understand how the architecture works before diving into the codebase.
-
-## 🖥 Development
-Other than the research, GPT Pilot needs to be debugged to work in different scenarios. For example, we realized that the quality of the code generated is very sensitive to the size of the development task. When the task is too broad, the code has too many bugs that are hard to fix, but when the development task is too narrow, GPT also seems to struggle in getting the task implemented into the existing code.
-
-## 📊 Telemetry
-To improve GPT Pilot, we are tracking some events from which you can opt out at any time. You can read more about it [here](./docs/TELEMETRY.md).
-
-# 🔗 Connect with us
-🌟 As an open-source tool, it would mean the world to us if you starred the GPT-pilot repo 🌟
-
-💬 Join [the Discord server](https://discord.gg/HaqXugmxr9) to get in touch.
+Während dieses Repository unabhängig weiterentwickelt wird, erkennen wir die Arbeit und den Beitrag der ursprünglichen Entwickler an. Für Informationen zur ursprünglichen Community und Entwicklung besuchen Sie bitte das [Originalrepository](https://github.com/Pythagora-io/gpt-pilot).

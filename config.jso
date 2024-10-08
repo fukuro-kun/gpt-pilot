@@ -1,0 +1,117 @@
+{
+  "language": "de",
+  "llm": {
+    "openai": {
+      "base_url": "http://localhost:11434/v1",
+      "api_key": "ollama",
+      "connect_timeout": 60.0,
+      "read_timeout": 300.0
+    }
+  },
+  "agent": {
+    "default": {
+      "provider": "openai",
+      "model": "mistral-small:22b-instruct-2409-q8_0",
+      "temperature": 0.5
+    },
+    "architect": {
+      "provider": "openai",
+      "model": "mistral-small:22b-instruct-2409-q8_0",
+      "temperature": 0.7
+    },
+    "tech_lead": {
+      "provider": "openai",
+      "model": "mistral-small:22b-instruct-2409-q8_0",
+      "temperature": 0.7
+    },
+    "developer": {
+      "provider": "openai",
+      "model": "mistral-small:22b-instruct-2409-q8_0",
+      "temperature": 0.5
+    },
+    "bug_hunter": {
+      "provider": "openai",
+      "model": "mistral-small:22b-instruct-2409-q8_0",
+      "temperature": 0.6
+    },
+    "troubleshooter": {
+      "provider": "openai",
+      "model": "mistral-small:22b-instruct-2409-q8_0",
+      "temperature": 0.6
+    },
+    "external_docs": {
+      "provider": "openai",
+      "model": "mistral-small:22b-instruct-2409-q8_0",
+      "temperature": 0.5
+    },
+    "code_monkey": {
+      "provider": "openai",
+      "model": "llama3:8b-instruct-q8_0",
+      "temperature": 0.2
+    },
+    "executor": {
+      "provider": "openai",
+      "model": "llama3:8b-instruct-q8_0",
+      "temperature": 0.2
+    },
+    "importer": {
+      "provider": "openai",
+      "model": "llama3:8b-instruct-q8_0",
+      "temperature": 0.3
+    },
+    "spec_writer": {
+      "provider": "openai",
+      "model": "openchat-3.6-8b:latest",
+      "temperature": 0.8
+    },
+    "problem_solver": {
+      "provider": "openai",
+      "model": "openchat-3.6-8b:latest",
+      "temperature": 0.7
+    },
+    "tech_writer": {
+      "provider": "openai",
+      "model": "openchat-3.6-8b:latest",
+      "temperature": 0.5
+    }
+  },
+  "log": {
+    "level": "DEBUG",
+    "format": "%(asctime)s %(levelname)s [%(name)s] %(message)s",
+    "output": "pythagora.log"
+  },
+  "db": {
+    "url": "sqlite+aiosqlite:///pythagora.db",
+    "debug_sql": false
+  },
+  "ui": {
+    "type": "plain"
+  },
+  "fs": {
+    "type": "local",
+    "workspace_root": "workspace",
+    "ignore_paths": [
+      ".git",
+      ".gpt-pilot",
+      ".idea",
+      ".vscode",
+      ".next",
+      ".DS_Store",
+      "__pycache__",
+      "site-packages",
+      "node_modules",
+      "package-lock.json",
+      "venv",
+      "dist",
+      "build",
+      "target",
+      "*.min.js",
+      "*.min.css",
+      "*.svg",
+      "*.csv",
+      "*.log",
+      "go.sum"
+    ],
+    "ignore_size_threshold": 50000
+  }
+}

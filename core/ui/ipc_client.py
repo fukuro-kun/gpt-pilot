@@ -1,14 +1,16 @@
+# gpt-pilot/core/ui/ipc_client.py
 import asyncio
 import json
 from enum import Enum
 from os.path import basename
-from typing import Optional, Union
+from typing import Optional, Union, List, Dict
 
 from pydantic import BaseModel, ValidationError
 
 from core.config import LocalIPCConfig
 from core.log import get_logger
-from core.ui.base import ProjectStage, UIBase, UIClosedError, UISource, UserInput
+from core.ui.base import ProjectStage, UIBase, UIClosedError, UISource, UserInput, empty_list
+from core.ui.translations import translate
 
 VSCODE_EXTENSION_HOST = "localhost"
 VSCODE_EXTENSION_PORT = 8125
@@ -76,7 +78,7 @@ class Message(BaseModel):
         return self.model_dump_json().encode("utf-8")
 
     @classmethod
-    def from_bytes(self, data: bytes) -> "Message":
+    def from_bytes(cls, data: bytes) -> "Message":
         """
         Parses raw byte payload into a message.
 
@@ -95,7 +97,7 @@ class Message(BaseModel):
             json_data = json.loads(data.decode("utf-8"))
         except (json.JSONDecodeError, UnicodeDecodeError) as err:
             raise ValueError(f"Error decoding JSON: {err}") from err
-        return Message.model_validate_json(json.dumps(json_data))
+        return cls.model_validate_json(json.dumps(json_data))
 
 
 class IPCClientUI(UIBase):
@@ -315,8 +317,8 @@ class IPCClientUI(UIBase):
 
     async def send_epics_and_tasks(
         self,
-        epics: list[dict],
-        tasks: list[dict],
+        epics: List[Dict],
+        tasks: List[Dict],
     ):
         await self._send(
             MessageType.EPICS_AND_TASKS,
@@ -334,7 +336,7 @@ class IPCClientUI(UIBase):
         source: str,
         status: str,
         source_index: int = 1,
-        tasks: list[dict] = None,
+        tasks: List[Dict] = empty_list(),
     ):
         await self._send(
             MessageType.PROGRESS,
@@ -353,7 +355,7 @@ class IPCClientUI(UIBase):
 
     async def send_modified_files(
         self,
-        modified_files: dict[str, str, str],
+        modified_files: List[Dict[str, str]],
     ):
         await self._send(
             MessageType.MODIFIED_FILES,
@@ -462,15 +464,15 @@ class IPCClientUI(UIBase):
         )
 
     async def stop_app(self):
-        log.debug("Sending signal to stop the App")
+        log.debug(translate("sending_stop_signal"))
         await self._send(MessageType.STOP_APP)
 
     async def close_diff(self):
-        log.debug("Sending signal to close the generated diff file")
+        log.debug(translate("sending_close_diff_signal"))
         await self._send(MessageType.CLOSE_DIFF)
 
     async def loading_finished(self):
-        log.debug("Sending project loading finished signal to the extension")
+        log.debug(translate("sending_loading_finished_signal"))
         await self._send(MessageType.LOADING_FINISHED)
 
     async def send_project_description(self, description: str):
